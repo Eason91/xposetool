@@ -1,25 +1,31 @@
 package com.meiriq.xposehook;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.ActionBar;
-import android.telephony.TelephonyManager;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.android.volley.VolleyError;
 import com.meiriq.xposehook.adapter.DataSpinnerAdapter;
-import com.meiriq.xposehook.utils.L;
+import com.meiriq.xposehook.bean.ConfigHelper;
+import com.meiriq.xposehook.bean.Constant;
+import com.meiriq.xposehook.bean.DataInfo;
+import com.meiriq.xposehook.bean.util.SetDataUtil;
+import com.meiriq.xposehook.net.VolleyListener;
+import com.meiriq.xposehook.net.control.DataService;
+import com.meiriq.xposehook.utils.DialogUtil;
 import com.meiriq.xposehook.utils.XposeUtil;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 public class SetDataActivity extends BaseActivity {
 
@@ -57,7 +63,7 @@ public class SetDataActivity extends BaseActivity {
     private EditText mAndroidId;
     private EditText mPhoneNum;
     private EditText mSimId;
-    private EditText mISIM;
+    private EditText mIMSI;
     private EditText mOperator;
     EditText mNetTypeName;
     EditText mNetType;
@@ -82,7 +88,11 @@ public class SetDataActivity extends BaseActivity {
     EditText mPortNumber;
     EditText mBluetoothAddress;
     EditText mInternalIp;
+    DataService dataService;
     private void initView() {
+
+        dataService = new DataService(this);
+
         TextInputLayout tilDeviceId = (TextInputLayout) findViewById(R.id.til_device_id);
         tilDeviceId.setHint("序列号");
         mDeviceId = tilDeviceId.getEditText();
@@ -101,7 +111,7 @@ public class SetDataActivity extends BaseActivity {
 
         TextInputLayout tilISIM = (TextInputLayout) findViewById(R.id.til_isim);
         tilISIM.setHint("ISIM");
-        mISIM = tilISIM.getEditText();
+        mIMSI = tilISIM.getEditText();
 
         TextInputLayout tilOperator = (TextInputLayout) findViewById(R.id.til_operator);
         tilOperator.setHint("运营商");
@@ -200,7 +210,13 @@ public class SetDataActivity extends BaseActivity {
         t29.setHint("内网IP");
         mInternalIp = t29.getEditText();
 
+        dataInfo = ConfigHelper.loadDataInfo(this);
+        if(dataInfo!=null){
+            setDataInfo(dataInfo);
+        }
+
     }
+    private DataInfo dataInfo;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -218,25 +234,156 @@ public class SetDataActivity extends BaseActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_save) {
-            int i = new Random().nextInt(100);
-            String tess = "1234567890"+i;
-            try {
-                XposeUtil.configMap.put(XposeUtil.deviceId,tess);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+            saveDataInfo();
             XposeUtil.saveConfigMap();
-            L.debug("保存成功"+tess);
+            Toast.makeText(this,"保存成功",Toast.LENGTH_SHORT).show();
 
         }else if(id ==R.id.action_get){
-            TelephonyManager telephonyManager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
-            String deviceId = telephonyManager.getDeviceId();
-            Toast.makeText(this,deviceId+"",Toast.LENGTH_SHORT).show();
+            showLoadingProgressDialog();
+            dataService.getStringRequest(Constant.url_getData, null, new VolleyListener() {
+                @Override
+                public void onComplete(JSONObject jsonObject) {
+                    dismissProgressDialog();
+                    dataInfo = SetDataUtil.parseJsonObject2DataInfo(jsonObject);
+                    setDataInfo(dataInfo);
+                }
+
+                @Override
+                public void onError(VolleyError error) {
+                    dismissProgressDialog();
+                    DialogUtil.showOkDialog(SetDataActivity.this, "加载失败");
+                }
+            });
         }
 
         return super.onOptionsItemSelected(item);
     }
 
+    private void saveDataInfo() {
 
+        jsonPut(XposeUtil.m_deviceId,mDeviceId.getText().toString().trim());
+        jsonPut(XposeUtil.m_androidId, mAndroidId.getText().toString().trim());
+        jsonPut(XposeUtil.m_bluetoothaddress, mBluetoothAddress.getText().toString().trim());
+//        jsonPut(XposeUtil.m_, mCpu.getText().toString().trim());
+        jsonPut(XposeUtil.m_fingerprint, mFingerPrint.getText().toString().trim());
+        jsonPut(XposeUtil.m_firmwareversion, mFirmwareVersion.getText().toString().trim());
+        jsonPut(XposeUtil.m_hardware, mHardware.getText().toString().trim());
+//        jsonPut(XposeUtil.m_, mInternalIp.getText().toString().trim());
+        jsonPut(XposeUtil.m_subscriberId, mIMSI.getText().toString().trim());
+        jsonPut(XposeUtil.m_macAddress, mMacAddress.getText().toString().trim());
+        jsonPut(XposeUtil.m_networkType, mNetType.getText().toString().trim());
+//        jsonPut(XposeUtil.m_, mEquipmentName.getText().toString().trim());
+        jsonPut(XposeUtil.m_networkOperatorName, mNetTypeName.getText().toString().trim());
+        jsonPut(XposeUtil.m_simOperator, mOperator.getText().toString().trim());
+        jsonPut(XposeUtil.m_brand, mPhoneBrand.getText().toString().trim());
+        jsonPut(XposeUtil.m_model, mPhoneModelNumber.getText().toString().trim());
+        jsonPut(XposeUtil.m_phoneNum, mPhoneNum.getText().toString().trim());
+        jsonPut(XposeUtil.m_phoneType, mPhoneType.getText().toString().trim());
+        jsonPut(XposeUtil.m_serial, mPortNumber.getText().toString().trim());
+        jsonPut(XposeUtil.m_product, mProductName.getText().toString().trim());
+        jsonPut(XposeUtil.m_manufacture, mProductor.getText().toString().trim());
+        jsonPut(XposeUtil.m_simSerialNumber, mSimId.getText().toString().trim());
+        jsonPut(XposeUtil.m_SSID, mRouteName.getText().toString().trim());
+        jsonPut(XposeUtil.m_BSSID, mRouteAddress.getText().toString().trim());
+        jsonPut(XposeUtil.m_screenSize, mScreenSize.getText().toString().trim());
+        jsonPut(XposeUtil.m_simState, mSimStatus.getText().toString().trim());
+        jsonPut(XposeUtil.m_framework, mSystemFramework.getText().toString().trim());
+        jsonPut(XposeUtil.m_RELEASE, mSystemVersion.getText().toString().trim());
+        jsonPut(XposeUtil.m_SDK, mSystemVersionValue.getText().toString().trim());
 
+    }
+
+    private void setDataInfo(DataInfo dataInfo) {
+        mDeviceId.setText(dataInfo.getDeviceId());
+        mAndroidId.setText(dataInfo.getAndroidId());
+        mBluetoothAddress.setText(dataInfo.getBluetoothAddress());
+        mCpu.setText(dataInfo.getCpu());
+        mFingerPrint.setText(dataInfo.getFingerPrint());
+        mFirmwareVersion.setText(dataInfo.getFirmwareVersion());
+        mHardware.setText(dataInfo.getHardware());
+        mInternalIp.setText(dataInfo.getInternalIp());
+        mIMSI.setText(dataInfo.getImsi());
+        mMacAddress.setText(dataInfo.getMacAddress());
+        mNetType.setText(dataInfo.getNetType());
+        mEquipmentName.setText(dataInfo.getEquipmentName());
+        mNetTypeName.setText(dataInfo.getNetTypeName());
+        mOperator.setText(dataInfo.getOperator());
+        mPhoneBrand.setText(dataInfo.getPhoneBrand());
+        mPhoneModelNumber.setText(dataInfo.getPhoneModelNumber());
+        mPhoneNum.setText(dataInfo.getPhoneNum());
+        mPhoneType.setText(dataInfo.getPhoneType());
+        mPortNumber.setText(dataInfo.getPortNumber());
+        mProductName.setText(dataInfo.getProductName());
+        mProductor.setText(dataInfo.getProductor());
+        mSimId.setText(dataInfo.getSimId());
+        mRouteAddress.setText(dataInfo.getRouteAddress());
+        mRouteName.setText(dataInfo.getRouteName());
+        mScreenSize.setText(dataInfo.getScreenSize());
+        mSimStatus.setText(dataInfo.getSimStatus());
+        mSystemFramework.setText(dataInfo.getSystemFramework());
+        mSystemVersion.setText(dataInfo.getSystemVersion());
+        mSystemVersionValue.setText(dataInfo.getSystemVersionValue());
+
+    }
+
+    private void updateDataInfo(){
+        dataInfo.setDeviceId(mDeviceId.getText().toString().trim());
+        dataInfo.setAndroidId(mAndroidId.getText().toString().trim());
+        dataInfo.setBluetoothAddress(mBluetoothAddress.getText().toString().trim());
+        dataInfo.setCpu(mCpu.getText().toString().trim());
+        dataInfo.setFingerPrint(mFingerPrint.getText().toString().trim());
+        dataInfo.setFirmwareVersion(mFirmwareVersion.getText().toString().trim());
+        dataInfo.setHardware(mHardware.getText().toString().trim());
+        dataInfo.setInternalIp(mInternalIp.getText().toString().trim());
+        dataInfo.setImsi(mIMSI.getText().toString().trim());
+        dataInfo.setMacAddress(mMacAddress.getText().toString().trim());
+        dataInfo.setNetType(mNetType.getText().toString().trim());
+        dataInfo.setEquipmentName(mEquipmentName.getText().toString().trim());
+        dataInfo.setNetTypeName(mNetTypeName.getText().toString().trim());
+        dataInfo.setOperator(mOperator.getText().toString().trim());
+        dataInfo.setPhoneBrand(mPhoneBrand.getText().toString().trim());
+        dataInfo.setPhoneModelNumber(mPhoneModelNumber.getText().toString().trim());
+        dataInfo.setPhoneNum(mPhoneNum.getText().toString().trim());
+        dataInfo.setPhoneType(mPhoneType.getText().toString().trim());
+        dataInfo.setPortNumber(mPortNumber.getText().toString().trim());
+        dataInfo.setProductName(mProductName.getText().toString().trim());
+        dataInfo.setProductor(mProductor.getText().toString().trim());
+        dataInfo.setSimId(mSimId.getText().toString().trim());
+        dataInfo.setRouteName(mRouteName.getText().toString().trim());
+        dataInfo.setRouteAddress(mRouteAddress.getText().toString().trim());
+        dataInfo.setScreenSize(mScreenSize.getText().toString().trim());
+        dataInfo.setSimStatus(mSimStatus.getText().toString().trim());
+        dataInfo.setSystemFramework(mSystemFramework.getText().toString().trim());
+        dataInfo.setSystemVersion(mSystemVersion.getText().toString().trim());
+        dataInfo.setSystemVersionValue(mSystemVersionValue.getText().toString().trim());
+    }
+
+    private void jsonPut(String key,String value){
+        try {
+            XposeUtil.configMap.put(key,value);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+
+        if(keyCode == KeyEvent.KEYCODE_BACK){
+            back();
+            finish();
+            return true;
+        }
+
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public void back() {
+        updateDataInfo();
+        ConfigHelper.saveDataInfo(this, dataInfo);
+        saveDataInfo();
+        XposeUtil.saveConfigMap();
+        Toast.makeText(this,"保存成功",Toast.LENGTH_SHORT).show();
+    }
 }

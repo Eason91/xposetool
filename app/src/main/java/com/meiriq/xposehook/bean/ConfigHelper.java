@@ -15,6 +15,7 @@ public class ConfigHelper {
 
     private static ConfigHelper configHelper;
     private static final String CONFIG = "config";
+    private static final String DATAINFO = "datainfo";
     private static Config config ;
 
     private ConfigHelper(){};
@@ -71,6 +72,37 @@ public class ConfigHelper {
         }
 
         return config;
+    }
+
+    public static void saveDataInfo(Context context,DataInfo dataInfo){
+        File file = new File(context.getFilesDir(),DATAINFO);
+        if(file.exists()){
+            file.delete();
+        }
+        try {
+            ObjectOutputStream outputStream = new ObjectOutputStream(context.openFileOutput(DATAINFO,Context.MODE_PRIVATE));
+            outputStream.writeObject(dataInfo);
+            outputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static DataInfo loadDataInfo(Context context){
+        DataInfo dataInfo = null;
+        File file = new File(context.getFilesDir(),DATAINFO);
+        if(file.exists()){
+            try {
+                ObjectInputStream inputStream = new ObjectInputStream(context.openFileInput(DATAINFO));
+                dataInfo = (DataInfo) inputStream.readObject();
+                inputStream.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+
+            }
+        }
+
+        return dataInfo;
     }
 
 }

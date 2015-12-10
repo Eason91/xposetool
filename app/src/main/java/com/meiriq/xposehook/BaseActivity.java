@@ -1,5 +1,8 @@
 package com.meiriq.xposehook;
 
+import android.app.ProgressDialog;
+import android.content.Context;
+
 import com.meiriq.xposehook.bean.ApkInfo;
 import com.meiriq.xposehook.bean.AppInfo;
 
@@ -9,6 +12,20 @@ import java.util.List;
  * Created by tian on 15-11-27.
  */
 public class BaseActivity extends ToolbarActivity{
+
+    ProgressDialog progressDialog;
+
+    public void showLoadingProgressDialog(){
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progressDialog.setMessage("加载中...");
+        progressDialog.show();
+    }
+
+    public void dismissProgressDialog(){
+        if(progressDialog!=null && progressDialog.isShowing())
+            progressDialog.dismiss();
+    }
 
 
     /**

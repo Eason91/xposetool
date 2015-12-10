@@ -1,15 +1,17 @@
 package com.meiriq.xposehook.bean;
 
+import java.io.Serializable;
+
 /**
  * Created by tian on 15-12-8.
  */
-public class DataInfo {
+public class DataInfo implements Serializable{
 
     private String deviceId;
     private String androidId;
     private String phoneNum;
     private String simId;
-    private String isim;
+    private String imsi;
 
     private String operator;
     private String netTypeName;
@@ -73,12 +75,12 @@ public class DataInfo {
         this.simId = simId;
     }
 
-    public String getIsim() {
-        return isim;
+    public String getImsi() {
+        return imsi;
     }
 
-    public void setIsim(String isim) {
-        this.isim = isim;
+    public void setImsi(String imsi) {
+        this.imsi = imsi;
     }
 
     public String getOperator() {

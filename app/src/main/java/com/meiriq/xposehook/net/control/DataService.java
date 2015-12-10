@@ -2,6 +2,7 @@ package com.meiriq.xposehook.net.control;
 
 import android.content.Context;
 
+import com.meiriq.xposehook.bean.DataInfo;
 import com.meiriq.xposehook.net.BaseService;
 
 /**
@@ -11,4 +12,7 @@ public class DataService extends BaseService{
     public DataService(Context context) {
         super(context);
     }
+
+
+
 }
