@@ -151,24 +151,24 @@ public class XposeHook implements IXposedHookLoadPackage{
 //                    }
 //                }else
                 //屏幕大小
-                if("getDisplayMetrics".equals(methodName)){
-                    String[] split = XposeUtil.configMap.optString(XposeUtil.m_screenSize).split("x");
-                    if(split.length == 2){
-                        DisplayMetrics displayMetrics = (DisplayMetrics) param.getResult();
-                        displayMetrics.heightPixels = Integer.parseInt(split[0]);
-                        displayMetrics.widthPixels = Integer.parseInt(split[1]);
-                        param.setResult(displayMetrics);
-                    }
-                }else
-                //屏幕大小
-                if("getMetrics".equals(methodName)){
-                    String[] split = XposeUtil.configMap.optString(XposeUtil.m_screenSize).split("x");
-                    if(split.length == 2){
-                        Object arg = param.args[0];
-                        ((DisplayMetrics)arg).heightPixels = Integer.parseInt(split[0]);
-                        ((DisplayMetrics)arg).widthPixels = Integer.parseInt(split[1]);
-                    }
-                }else
+//                if("getDisplayMetrics".equals(methodName)){
+//                    String[] split = XposeUtil.configMap.optString(XposeUtil.m_screenSize).split("x");
+//                    if(split.length == 2){
+//                        DisplayMetrics displayMetrics = (DisplayMetrics) param.getResult();
+//                        displayMetrics.heightPixels = Integer.parseInt(split[0]);
+//                        displayMetrics.widthPixels = Integer.parseInt(split[1]);
+//                        param.setResult(displayMetrics);
+//                    }
+//                }else
+//                //屏幕大小
+//                if("getMetrics".equals(methodName)){
+//                    String[] split = XposeUtil.configMap.optString(XposeUtil.m_screenSize).split("x");
+//                    if(split.length == 2){
+//                        Object arg = param.args[0];
+//                        ((DisplayMetrics)arg).heightPixels = Integer.parseInt(split[0]);
+//                        ((DisplayMetrics)arg).widthPixels = Integer.parseInt(split[1]);
+//                    }
+//                }else
                 //蓝牙地址
                 if("getAddress".equals(methodName)){
 //                    XposeUtil.initConfigMap();
@@ -229,12 +229,8 @@ public class XposeHook implements IXposedHookLoadPackage{
 //                    XposeUtil.initConfigMap();
                     int m_simState = XposeUtil.configMap.optInt(XposeUtil.m_simState, -1);
                     if(m_simState != -1)
-                        param.setResult(m_simState);
-//                    if(m_simState != null){
-//                        L.debug("修改m_simState");
-//                    }else{
-//                        L.debug("获取m_simState为空");
-//                    }
+                        param.setResult(5);
+
                 }else
                 //手机类型
                 if("getPhoneType".equals(methodName)){
@@ -242,23 +238,15 @@ public class XposeHook implements IXposedHookLoadPackage{
                     int m_phoneType = XposeUtil.configMap.optInt(XposeUtil.m_phoneType,-1);
                         if(m_phoneType != -1)
                         param.setResult(m_phoneType);
-//                    if(m_phoneType != null){
-//                        L.debug("修改m_phoneType");
-//                    }else{
-//                        L.debug("获取m_phoneType为空");
-//                    }
+
                 }else
                 //网络类型
                 if("getNetworkType".equals(methodName)){
-//                    XposeUtil.initConfigMap();
+
                     int m_networkType = XposeUtil.configMap.optInt(XposeUtil.m_networkType, -1);
                     if(m_networkType != -1)
                         param.setResult(m_networkType);
-//                    if(m_networkType != null){
-//                        L.debug("修改m_networkType");
-//                    }else{
-//                        L.debug("获取m_networkType为空");
-//                    }
+
                 }else
                 //网络类型名
                 if("getNetworkOperatorName".equals(methodName)){

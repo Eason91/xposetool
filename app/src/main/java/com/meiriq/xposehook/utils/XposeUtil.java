@@ -68,7 +68,11 @@ public class XposeUtil {
     }
 
     private static void saveFileData(String fileName,String value){
-        File localFile = new File(Environment.getExternalStorageDirectory()+FILE_PATH_XPOSR,fileName);
+        File localFile = new File(Environment.getExternalStorageDirectory()+FILE_PATH_XPOSR);
+        if(!localFile.exists()){
+            localFile.mkdir();
+        }
+        localFile = new File(localFile,fileName);
         if(!localFile.exists()){
             try {
                 localFile.createNewFile();

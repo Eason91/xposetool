@@ -48,6 +48,7 @@
 -keep class com.android.support.cardview-v7.** { *; }
 -keep class com.android.support.design.** { *; }
 -keep class com.android.support.recyclerview-v7.** { *; }
+-keep class com.meiriq.xposehook.tutorial.** { *; }
 -keepattributes **
 
 -keepattributes *Annotation*
