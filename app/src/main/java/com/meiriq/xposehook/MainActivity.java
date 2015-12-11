@@ -31,6 +31,7 @@ import com.meiriq.xposehook.tutorial.AppUtils;
 import com.meiriq.xposehook.tutorial.Shell;
 import com.meiriq.xposehook.utils.L;
 import com.meiriq.xposehook.utils.TestUtil;
+import com.umeng.update.UmengUpdateAgent;
 
 import java.util.ArrayList;
 
@@ -58,6 +59,8 @@ public class MainActivity extends BaseActivity
         initView();
 
         Shell.getRoot();
+
+        UmengUpdateAgent.update(this);
 
 
     }

@@ -3,6 +3,7 @@ package com.meiriq.xposehook;
 import android.os.Bundle;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.ActionBar;
+import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -261,7 +262,7 @@ public class SetDataActivity extends BaseActivity {
 
     private void saveDataInfo() {
 
-        jsonPut(XposeUtil.m_deviceId,mDeviceId.getText().toString().trim());
+        jsonPut(XposeUtil.m_deviceId, mDeviceId.getText().toString().trim());
         jsonPut(XposeUtil.m_androidId, mAndroidId.getText().toString().trim());
         jsonPut(XposeUtil.m_bluetoothaddress, mBluetoothAddress.getText().toString().trim());
 //        jsonPut(XposeUtil.m_, mCpu.getText().toString().trim());
@@ -327,35 +328,46 @@ public class SetDataActivity extends BaseActivity {
     }
 
     private void updateDataInfo(){
-        dataInfo.setDeviceId(mDeviceId.getText().toString().trim());
-        dataInfo.setAndroidId(mAndroidId.getText().toString().trim());
-        dataInfo.setBluetoothAddress(mBluetoothAddress.getText().toString().trim());
-        dataInfo.setCpu(mCpu.getText().toString().trim());
-        dataInfo.setFingerPrint(mFingerPrint.getText().toString().trim());
-        dataInfo.setFirmwareVersion(mFirmwareVersion.getText().toString().trim());
-        dataInfo.setHardware(mHardware.getText().toString().trim());
-        dataInfo.setInternalIp(mInternalIp.getText().toString().trim());
-        dataInfo.setImsi(mIMSI.getText().toString().trim());
-        dataInfo.setMacAddress(mMacAddress.getText().toString().trim());
-        dataInfo.setNetType(mNetType.getText().toString().trim());
-        dataInfo.setEquipmentName(mEquipmentName.getText().toString().trim());
-        dataInfo.setNetTypeName(mNetTypeName.getText().toString().trim());
-        dataInfo.setOperator(mOperator.getText().toString().trim());
-        dataInfo.setPhoneBrand(mPhoneBrand.getText().toString().trim());
-        dataInfo.setPhoneModelNumber(mPhoneModelNumber.getText().toString().trim());
-        dataInfo.setPhoneNum(mPhoneNum.getText().toString().trim());
-        dataInfo.setPhoneType(mPhoneType.getText().toString().trim());
-        dataInfo.setPortNumber(mPortNumber.getText().toString().trim());
-        dataInfo.setProductName(mProductName.getText().toString().trim());
-        dataInfo.setProductor(mProductor.getText().toString().trim());
-        dataInfo.setSimId(mSimId.getText().toString().trim());
-        dataInfo.setRouteName(mRouteName.getText().toString().trim());
-        dataInfo.setRouteAddress(mRouteAddress.getText().toString().trim());
-        dataInfo.setScreenSize(mScreenSize.getText().toString().trim());
-        dataInfo.setSimStatus(mSimStatus.getText().toString().trim());
-        dataInfo.setSystemFramework(mSystemFramework.getText().toString().trim());
-        dataInfo.setSystemVersion(mSystemVersion.getText().toString().trim());
-        dataInfo.setSystemVersionValue(mSystemVersionValue.getText().toString().trim());
+
+        dataInfo.setDeviceId(getTextString(mDeviceId));
+        dataInfo.setAndroidId(getTextString(mAndroidId));
+        dataInfo.setBluetoothAddress(getTextString(mBluetoothAddress));
+        dataInfo.setCpu(getTextString(mCpu));
+        dataInfo.setFingerPrint(getTextString(mFingerPrint));
+        dataInfo.setFirmwareVersion(getTextString(mFirmwareVersion));
+        dataInfo.setHardware(getTextString(mHardware));
+        dataInfo.setInternalIp(getTextString(mInternalIp));
+        dataInfo.setImsi(getTextString(mIMSI));
+        dataInfo.setMacAddress(getTextString(mMacAddress));
+        dataInfo.setNetType(getTextString(mNetType));
+        dataInfo.setEquipmentName(getTextString(mEquipmentName));
+        dataInfo.setNetTypeName(getTextString(mNetTypeName));
+        dataInfo.setOperator(getTextString(mOperator));
+        dataInfo.setPhoneBrand(getTextString(mPhoneBrand));
+        dataInfo.setPhoneModelNumber(getTextString(mPhoneModelNumber));
+        dataInfo.setPhoneNum(getTextString(mPhoneNum));
+        dataInfo.setPhoneType(getTextString(mPhoneType));
+        dataInfo.setPortNumber(getTextString(mPortNumber));
+        dataInfo.setProductName(getTextString(mProductName));
+        dataInfo.setProductor(getTextString(mProductor));
+        dataInfo.setSimId(getTextString(mSimId));
+        dataInfo.setRouteName(getTextString(mRouteName));
+        dataInfo.setRouteAddress(getTextString(mRouteAddress));
+        dataInfo.setScreenSize(getTextString(mScreenSize));
+        dataInfo.setSimStatus(getTextString(mSimStatus));
+        dataInfo.setSystemFramework(getTextString(mSystemFramework));
+        dataInfo.setSystemVersion(getTextString(mSystemVersion));
+        dataInfo.setSystemVersionValue(getTextString(mSystemVersionValue));
+
+
+    }
+
+    private String getTextString(EditText editText) {
+        String result = editText.getText().toString().trim();
+        if(result== null)
+            result = "";
+
+        return result;
     }
 
     private void jsonPut(String key,String value){
@@ -380,6 +392,7 @@ public class SetDataActivity extends BaseActivity {
 
     @Override
     public void back() {
+
         updateDataInfo();
         ConfigHelper.saveDataInfo(this, dataInfo);
         saveDataInfo();

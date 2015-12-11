@@ -101,6 +101,8 @@ public class ConfigHelper {
 
             }
         }
+        if(dataInfo == null)
+            dataInfo = new DataInfo();
 
         return dataInfo;
     }

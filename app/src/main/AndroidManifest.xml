@@ -4,6 +4,7 @@
 
     <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -74,6 +75,20 @@
             android:label="@string/title_activity_set_data"
             android:windowSoftInputMode="stateAlwaysHidden"
             android:theme="@style/AppTheme.NoActionBar"/>
+
+        <service
+            android:name="com.umeng.update.net.DownloadingService"
+            android:process=":DownloadingService" >
+        </service>
+        <activity
+            android:name="com.umeng.update.UpdateDialogActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" >
+        </activity>
+
+
+
+        <meta-data android:value="566a2b25e0f55ab43d004708" android:name="UMENG_APPKEY"/>
+        <meta-data android:value="Channel ID" android:name="UMENG_CHANNEL"/>
     </application>
 
 </manifest>
