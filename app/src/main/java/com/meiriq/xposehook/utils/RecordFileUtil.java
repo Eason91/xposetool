@@ -83,13 +83,9 @@ public class RecordFileUtil {
         if(!file.exists())
             return ;
         try {
-            L.debug("开始读书节");
             reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
             while ((message = reader.readLine())!=null){
-                L.debug("message---"+message);
-                if(fileMap.get(message) == null){
-                    fileMap.put(message, message);
-                }
+                fileMap.put(message, message);
             }
 
         } catch (Exception e) {
@@ -108,15 +104,19 @@ public class RecordFileUtil {
 
 
     public static boolean clearFileRecord(String packageName){
-        if(fileMap != null){
-            fileMap.clear();
-        }
+        clearFileMap();
         File file = new File(Environment.getExternalStorageDirectory()+ FILE_PATH_RECORD + File.separator + packageName);
         L.debug(file.exists()+file.getAbsolutePath());
         if(file.exists()){
             return file.delete();
         }
         return false;
+    }
+
+    public static void clearFileMap(){
+        if(fileMap != null){
+            fileMap.clear();
+        }
     }
 
     public static void deleteFile(){

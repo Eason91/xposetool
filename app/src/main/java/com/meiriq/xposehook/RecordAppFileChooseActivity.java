@@ -4,21 +4,20 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.view.KeyEvent;
-import android.view.Menu;
-import android.view.MenuItem;
 
 import com.meiriq.xposehook.adapter.AppListAdapter;
 import com.meiriq.xposehook.bean.AppInfo;
-import com.meiriq.xposehook.bean.ConfigHelper;
-import com.meiriq.xposehook.dao.WhiteUninstallDao;
 import com.meiriq.xposehook.tutorial.AppUtils;
 import com.meiriq.xposehook.utils.L;
+import com.meiriq.xposehook.utils.XposeUtil;
 
+import org.json.JSONException;
+
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 public class RecordAppFileChooseActivity extends BaseActivity {
 
@@ -37,19 +36,32 @@ public class RecordAppFileChooseActivity extends BaseActivity {
     }
 
 
+    private List<String> mapKey2List(String map){
+        List<String> list = new ArrayList<>();
+        if(TextUtils.isEmpty(map)){
+            return list;
+        }
+        String[] split = map.split(",");
+        if(split == null)
+            return list;
+        for (int i = 0; i < split.length; i++) {
+            String pkg = split[i].split("=")[0];
+            if(pkg.startsWith("{"))
+                pkg = pkg.substring(1);
+            list.add(pkg.trim());
+        }
+        return list;
+    }
     private void initData() {
 
 
         installApps = AppUtils.getInstance().getInstallApps(this, AppUtils.APP_TYPE_CUSTOM);
-        HashMap<String, String> hashMap = ConfigHelper.getConfig().getFileHookNameAndPackage();
-        if(hashMap != null){
-            Iterator<Map.Entry<String, String>> iterator = hashMap.entrySet().iterator();
-
-            while (iterator.hasNext()){
-                String key = iterator.next().getKey();
-                for (int i = 0; i < installApps.size(); i++) {
-                    if(key.equals(installApps.get(i).getPname())){
-                        installApps.get(i).setIsSelect(true);
+        List<String>selectApps = mapKey2List(XposeUtil.configMap.optString(XposeUtil.FileRecordPackageName));
+        if(selectApps.size()>0){
+            for (int i = 0; i < selectApps.size(); i++) {
+                for (int j = 0; j < installApps.size(); j++) {
+                    if(selectApps.get(i).equals(installApps.get(j).getPname())){
+                        installApps.get(j).setIsSelect(true);
                         break;
                     }
                 }
@@ -85,14 +97,12 @@ public class RecordAppFileChooseActivity extends BaseActivity {
 
     @Override
     protected void onDestroy() {
-
         super.onDestroy();
+//        XposeUtil.saveConfigMap();
     }
 
     private void save() {
-        HashMap<String, String> hashMap = ConfigHelper.getConfig().getFileHookNameAndPackage();
-        if(hashMap == null)
-            hashMap = new HashMap<>();
+        HashMap<String, String> hashMap = new HashMap<>();
         hashMap.clear();
         for (int i = 0; i < installApps.size(); i++) {
             AppInfo appInfo = installApps.get(i);
@@ -100,7 +110,12 @@ public class RecordAppFileChooseActivity extends BaseActivity {
                 hashMap.put(appInfo.getPname(), appInfo.getAppname());
             }
         }
-        ConfigHelper.getConfig().setFileHookNameAndPackage(hashMap);
+        L.debug(hashMap.toString());
+        try {
+            XposeUtil.configMap.put(XposeUtil.FileRecordPackageName,hashMap.toString());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
         setResult(Activity.RESULT_OK);
         finish();
     }

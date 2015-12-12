@@ -7,23 +7,23 @@ import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import com.android.volley.VolleyError;
+import com.meiriq.xposehook.adapter.DataSpinner1Adapter;
 import com.meiriq.xposehook.adapter.DataSpinnerAdapter;
 import com.meiriq.xposehook.bean.ConfigHelper;
-import com.meiriq.xposehook.bean.Constant;
 import com.meiriq.xposehook.bean.DataInfo;
-import com.meiriq.xposehook.bean.util.SetDataUtil;
-import com.meiriq.xposehook.net.VolleyListener;
+import com.meiriq.xposehook.net.Callback;
+import com.meiriq.xposehook.net.ErrorObject;
 import com.meiriq.xposehook.net.control.DataService;
 import com.meiriq.xposehook.utils.DialogUtil;
 import com.meiriq.xposehook.utils.XposeUtil;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +44,9 @@ public class SetDataActivity extends BaseActivity {
 
     }
 
+    int mPositionChannel = 0;
+    int mPositionTime = 0;
+    private List<String> listsChannel;
     private void setActionBar() {
 
         ActionBar actionBar = getSupportActionBar();
@@ -51,12 +54,24 @@ public class SetDataActivity extends BaseActivity {
         actionBar.setDisplayShowTitleEnabled(false);
         actionBar.setCustomView(R.layout.actionbar_custom_spinner);
         Spinner spinner = (Spinner) actionBar.getCustomView().findViewById(R.id.spinner);
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                mPositionChannel = position;
+
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
         DataSpinnerAdapter adapter = new DataSpinnerAdapter(this);
-        List<String> lists = new ArrayList<>();
-        for (int i = 0; i < 5; i++) {
-            lists.add(i+"hello");
-        }
-        adapter.setData(lists);
+        listsChannel = new ArrayList<>();
+        listsChannel.add("渠道:zy");
+        listsChannel.add("渠道:gm");
+        listsChannel.add("渠道:qd");
+        adapter.setData(listsChannel);
         spinner.setAdapter(adapter);
     }
 
@@ -90,9 +105,35 @@ public class SetDataActivity extends BaseActivity {
     EditText mBluetoothAddress;
     EditText mInternalIp;
     DataService dataService;
+    List<String> listsTime;
     private void initView() {
 
         dataService = new DataService(this);
+
+        Spinner spinnerTime = (Spinner) findViewById(R.id.spinner_time);
+        DataSpinner1Adapter adapter = new DataSpinner1Adapter(this);
+        listsTime = new ArrayList<>();
+        listsTime.add("留存(今天):1");
+        listsTime.add("留存(昨天):2");
+        listsTime.add("留存:3");
+        listsTime.add("留存:4");
+        listsTime.add("留存:5");
+        listsTime.add("留存:6");
+        listsTime.add("留存:7");
+        adapter.setData(listsTime);
+        spinnerTime.setAdapter(adapter);
+        spinnerTime.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                mPositionTime = position;
+
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
 
         TextInputLayout tilDeviceId = (TextInputLayout) findViewById(R.id.til_device_id);
         tilDeviceId.setHint("序列号");
@@ -216,6 +257,31 @@ public class SetDataActivity extends BaseActivity {
             setDataInfo(dataInfo);
         }
 
+        dataService.setCallback(new Callback() {
+            @Override
+            public void onStart() {
+                showLoadingProgressDialog();
+            }
+
+            @Override
+            public void onSuccess(Object object) {
+                dismissProgressDialog();
+                DataInfo tmpdataInfo = (DataInfo) object;
+                if(tmpdataInfo == null){
+                    Toast.makeText(SetDataActivity.this,"当前条件下无数据",Toast.LENGTH_LONG).show();
+                }else{
+                    setDataInfo(tmpdataInfo);
+                }
+            }
+
+            @Override
+            public void onError(ErrorObject error) {
+                dismissProgressDialog();
+                DialogUtil.showOkDialog(SetDataActivity.this, error.getMsg());
+            }
+        });
+
+
     }
     private DataInfo dataInfo;
 
@@ -240,21 +306,15 @@ public class SetDataActivity extends BaseActivity {
             Toast.makeText(this,"保存成功",Toast.LENGTH_SHORT).show();
 
         }else if(id ==R.id.action_get){
-            showLoadingProgressDialog();
-            dataService.getStringRequest(Constant.url_getData, null, new VolleyListener() {
-                @Override
-                public void onComplete(JSONObject jsonObject) {
-                    dismissProgressDialog();
-                    dataInfo = SetDataUtil.parseJsonObject2DataInfo(jsonObject);
-                    setDataInfo(dataInfo);
-                }
-
-                @Override
-                public void onError(VolleyError error) {
-                    dismissProgressDialog();
-                    DialogUtil.showOkDialog(SetDataActivity.this, "加载失败");
-                }
-            });
+            String channel = listsChannel.get(mPositionChannel);
+            String time = listsTime.get(mPositionTime);
+            String[] splitchannel = channel.split(":");
+            String[] splittime = time.split(":");
+            if(splitchannel.length == 2 && splittime.length == 2){
+                dataService.getSetData(splitchannel[1],Integer.parseInt(splittime[1]) - 1);
+            }else{
+                Toast.makeText(this,"参数失效",Toast.LENGTH_SHORT).show();
+            }
         }
 
         return super.onOptionsItemSelected(item);

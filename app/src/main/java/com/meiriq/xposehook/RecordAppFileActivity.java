@@ -2,23 +2,18 @@ package com.meiriq.xposehook;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.widget.AppCompatCheckBox;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import com.meiriq.xposehook.adapter.FileListAdapter;
-import com.meiriq.xposehook.bean.AppInfo;
-import com.meiriq.xposehook.bean.Config;
-import com.meiriq.xposehook.bean.ConfigHelper;
 import com.meiriq.xposehook.utils.L;
 import com.meiriq.xposehook.utils.RecordFileUtil;
 import com.meiriq.xposehook.utils.XposeUtil;
@@ -26,10 +21,7 @@ import com.meiriq.xposehook.utils.XposeUtil;
 import org.json.JSONException;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public class RecordAppFileActivity extends BaseActivity implements CompoundButton.OnCheckedChangeListener{
@@ -49,33 +41,28 @@ public class RecordAppFileActivity extends BaseActivity implements CompoundButto
 
     private RecyclerView recyclerView;
     private EditText editText;
-    private Config config;
     private AppCompatCheckBox checkBox;
     private List<String> pkgList;
     private void initView() {
         TextInputLayout textInputLayout = (TextInputLayout) findViewById(R.id.til_appinfo);
         textInputLayout.setHint("请选择应用");
         editText = textInputLayout.getEditText();
-
+        editText.setEnabled(false);
         recyclerView = (RecyclerView) findViewById(R.id.rv_recycleview);
 
-        config = ConfigHelper.getConfig();
+        XposeUtil.initConfigMap();
         checkBox = (AppCompatCheckBox) findViewById(R.id.accb_appchoose);
         checkBox.setOnCheckedChangeListener(this);
         checkBox.setChecked(XposeUtil.configMap.optBoolean(XposeUtil.FileRecordPackageNameSwitch));
 
-        XposeUtil.initConfigMap();
-        pkgList = map2List(XposeUtil.configMap.optString(XposeUtil.FileRecordPackageName));
-        L.debug(pkgList.toString());
+        RecordFileUtil.clearFileMap();
+        pkgList = mapKey2List(XposeUtil.configMap.optString(XposeUtil.FileRecordPackageName));
         for (int i = 0; i <pkgList.size(); i++) {
-            L.debug("开始"+pkgList.get(i));
             RecordFileUtil.getFileRecord(pkgList.get(i));
         }
         Set<String> strings = RecordFileUtil.fileMap.keySet();
-        L.debug(strings.toString());
         List<String> lists = new ArrayList<>();
         lists.addAll(strings);
-        L.debug(lists.toString());
 
         adapter = new FileListAdapter(this);
         adapter.setData(lists);
@@ -88,8 +75,11 @@ public class RecordAppFileActivity extends BaseActivity implements CompoundButto
         setEdit();
     }
 
-    private List<String> map2List(String map){
+    private List<String> mapKey2List(String map){
         List<String> list = new ArrayList<>();
+        if(TextUtils.isEmpty(map) || map.length() == 2){
+            return list;
+        }
         String[] split = map.split(",");
         if(split == null)
             return list;
@@ -102,27 +92,35 @@ public class RecordAppFileActivity extends BaseActivity implements CompoundButto
         return list;
     }
 
+    private List<String> mapValue2List(String map){
+        L.debug(map);
+        List<String> list = new ArrayList<>();
+        if(TextUtils.isEmpty(map) || map.length() == 2){
+            return list;
+        }
+        String[] split = map.split(",");
+        if(split == null)
+            return list;
+        for (int i = 0; i < split.length; i++) {
+            L.debug(split[i]);
+            String pkg = split[i].split("=")[1];
+            if(pkg.endsWith("}"))
+                pkg = pkg.substring(0,pkg.length() - 1);
+            list.add(pkg.trim());
+        }
+        return list;
+    }
+
 
     private FileListAdapter adapter;
     private void setEdit() {
-        HashMap<String, String> hashMap = ConfigHelper.getConfig().getFileHookNameAndPackage();
-
-
-        L.debug((hashMap == null)+"");
-        if(hashMap != null){
-            Iterator<Map.Entry<String, String>> iterator = hashMap.entrySet().iterator();
-            String recordappname = "";
-            while (iterator.hasNext()){
-                recordappname = recordappname + iterator.next().getValue()+",";
-            }
-            editText.setText(recordappname);
-            editText.setEnabled(false);
-            try {
-                XposeUtil.configMap.put(XposeUtil.FileRecordPackageName,hashMap.toString());
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+        String recordappname = "";
+        List<String>Strings = mapValue2List(XposeUtil.configMap.optString(XposeUtil.FileRecordPackageName));
+        for (int i = 0; i < Strings.size(); i++) {
+            recordappname = recordappname + Strings.get(i) + ",";
         }
+        editText.setText(recordappname);
+
     }
 
 
@@ -165,7 +163,6 @@ public class RecordAppFileActivity extends BaseActivity implements CompoundButto
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        ConfigHelper.saveConfig(this, config);
         XposeUtil.saveConfigMap();
         Toast.makeText(this,"保存成功",Toast.LENGTH_SHORT).show();
     }
@@ -181,7 +178,6 @@ public class RecordAppFileActivity extends BaseActivity implements CompoundButto
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
         if(isChecked){
-            L.debug("记录文件");
             try {
                 XposeUtil.configMap.put(XposeUtil.FileRecordPackageNameSwitch,true);
             } catch (JSONException e) {
@@ -189,8 +185,6 @@ public class RecordAppFileActivity extends BaseActivity implements CompoundButto
             }
         }
         else{
-            L.debug("不记录");
-            RecordFileUtil.isRecord = false;
             try {
                 XposeUtil.configMap.put(XposeUtil.FileRecordPackageNameSwitch,false);
             } catch (JSONException e) {
