@@ -1,7 +1,11 @@
 package com.meiriq.xposehook.tutorial;
 
+import android.app.ActivityManager;
 import android.bluetooth.BluetoothAdapter;
 import android.content.ContentResolver;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.net.wifi.WifiInfo;
 import android.os.*;
@@ -18,6 +22,7 @@ import com.meiriq.xposehook.utils.XposeUtil;
 
 import java.io.File;
 import java.io.FileReader;
+import java.util.List;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
@@ -73,10 +78,16 @@ public class XposeHook implements IXposedHookLoadPackage{
         addHook(loadPackageParam.packageName, Build.class.getName(), loadPackageParam.classLoader, "getRadioVersion", new Object[]{});
         addHook(loadPackageParam.packageName, BluetoothAdapter.class.getName(), loadPackageParam.classLoader, "getAddress", new Object[]{});
 
-        addHook(loadPackageParam.packageName, Display.class.getName(), loadPackageParam.classLoader, "getMetrics", new Object[]{DisplayMetrics.class.getName()});
+//        addHook(loadPackageParam.packageName, Display.class.getName(), loadPackageParam.classLoader, "getMetrics", new Object[]{DisplayMetrics.class.getName()});
 //        addHook(loadPackageParam.packageName, Display.class.getName(), loadPackageParam.classLoader, "getWidth", new Object[]{});
 //        addHook(loadPackageParam.packageName, Display.class.getName(), loadPackageParam.classLoader, "getHeight", new Object[]{});
-        addHook(loadPackageParam.packageName, Resources.class.getName(), loadPackageParam.classLoader, "getDisplayMetrics", new Object[]{});
+//        addHook(loadPackageParam.packageName, Resources.class.getName(), loadPackageParam.classLoader, "getDisplayMetrics", new Object[]{});
+
+        addHook(loadPackageParam.packageName, ActivityManager.class.getName(), loadPackageParam.classLoader, "getRunningAppProcesses", new Object[]{});
+        addHook(loadPackageParam.packageName, "android.app.ApplicationPackageManager", loadPackageParam.classLoader, "getInstalledPackages", new Object[]{Integer.TYPE.getName()});
+        addHook(loadPackageParam.packageName, "android.app.ApplicationPackageManager", loadPackageParam.classLoader, "getPackageInfo", new Object[]{String.class.getName(),Integer.TYPE.getName()});
+        addHook(loadPackageParam.packageName, "android.app.ApplicationPackageManager", loadPackageParam.classLoader, "getApplicationInfo", new Object[]{String.class.getName(),Integer.TYPE.getName()});
+        addHook(loadPackageParam.packageName, "android.app.ApplicationPackageManager", loadPackageParam.classLoader, "getInstalledApplications", new Object[]{Integer.TYPE.getName()});
 
 
 
@@ -134,7 +145,57 @@ public class XposeHook implements IXposedHookLoadPackage{
         XC_MethodHook xc_methodHook = new XC_MethodHook() {
 
             @Override
+            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                if("getPackageInfo".equals(methodName) ){
+                    if(param.args[0].equals(XposeUtil.pkg1) || param.args[0].equals(XposeUtil.pkg2) || param.args[0].equals(XposeUtil.pkg3)){
+                        param.args[0] = "yyyy.mmmm.aaaa.xxxx";
+                        L.debug("修改参数成功");
+                    }
+                }else
+                if("getApplicationInfo".equals(methodName) ){
+                    if(param.args[0].equals(XposeUtil.pkg1) || param.args[0].equals(XposeUtil.pkg2) || param.args[0].equals(XposeUtil.pkg3)){
+                        param.args[0] = "yyyy.mmmm.aaaa.xxxx";
+                        L.debug("修改参数成功");
+                    }
+                }
+            }
+
+            @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+//
+                if("getInstalledApplications".equals(methodName) ){
+                    List<ApplicationInfo> installedApplications = (List<ApplicationInfo>) param.getResult();
+                    for (int i = installedApplications.size() - 1; i >= 0 ; i--) {
+                        ApplicationInfo applicationInfo = installedApplications.get(i);
+                        if(applicationInfo.equals(XposeUtil.pkg1) || applicationInfo.equals(XposeUtil.pkg2) || applicationInfo.equals(XposeUtil.pkg3)){
+                            installedApplications.remove(i);
+                        }
+                    }
+                    param.setResult(installedApplications);
+                }else
+                //
+                if("getRunningAppProcesses".equals(methodName) ){
+                    List<ActivityManager.RunningAppProcessInfo> runningAppProcesses = (List<ActivityManager.RunningAppProcessInfo>) param.getResult();
+                    for (int i = runningAppProcesses.size() - 1; i >= 0; i--) {
+                        ActivityManager.RunningAppProcessInfo runningAppProcessInfo = runningAppProcesses.get(i);
+                        if(runningAppProcessInfo.processName.equals(XposeUtil.pkg1) || runningAppProcessInfo.processName.equals(XposeUtil.pkg2) || runningAppProcessInfo.processName.equals(XposeUtil.pkg3)){
+                            L.debug("getRunningAppProcesses+移除"+runningAppProcessInfo   );
+                            runningAppProcesses.remove(i);
+                        }
+                    }
+                    param.setResult(runningAppProcesses);
+                }else
+                if("getInstalledPackages".equals(methodName) ){
+                    List<PackageInfo> installedPackages = (List<PackageInfo>) param.getResult();
+                    for (int i = installedPackages.size() - 1; i >= 0; i--) {
+                        String s = installedPackages.get(i).packageName;
+                        if(s.equals(XposeUtil.pkg1) || s.equals(XposeUtil.pkg2) || s.equals(XposeUtil.pkg3)){
+                            L.debug("getInstalledPackages+移除"+s);
+                            installedPackages.remove(i);
+                        }
+                    }
+                    param.setResult(installedPackages);
+                }else
 
 //                //屏幕大小
 //                if("getWidth".equals(methodName) && className.equals(Display.class.getName())){

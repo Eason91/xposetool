@@ -46,6 +46,10 @@ public class XposeUtil {
     public static String m_fingerprint = "fingerprint";//指纹
     public static String m_serial = "serial";//序列号
 
+    public static String pkg1 = "de.robv.android.xpose.installer";
+    public static String pkg2 = "pro.burgerz.wsm.manager";
+    public static String pkg3 = "com.meiriq.xposehook";
+
 
     public static JSONObject configMap = new JSONObject();
 

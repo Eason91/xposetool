@@ -3,7 +3,6 @@ package com.meiriq.xposehook;
 import android.os.Bundle;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.ActionBar;
-import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -308,13 +307,22 @@ public class SetDataActivity extends BaseActivity {
         }else if(id ==R.id.action_get){
             String channel = listsChannel.get(mPositionChannel);
             String time = listsTime.get(mPositionTime);
-            String[] splitchannel = channel.split(":");
             String[] splittime = time.split(":");
-            if(splitchannel.length == 2 && splittime.length == 2){
-                dataService.getSetData(splitchannel[1],Integer.parseInt(splittime[1]) - 1);
+            String[] splitchannel = channel.split(":");
+            if(mPositionTime == 0){
+                if(splittime.length == 2){
+                    dataService.getSetDateNew(splitchannel[1]);
+                }else{
+                    Toast.makeText(this,"参数失效",Toast.LENGTH_SHORT).show();
+                }
             }else{
-                Toast.makeText(this,"参数失效",Toast.LENGTH_SHORT).show();
+                if(splitchannel.length == 2 && splittime.length == 2){
+                    dataService.getSetDataUsed(splitchannel[1], Integer.parseInt(splittime[1]) - 1);
+                }else{
+                    Toast.makeText(this,"参数失效",Toast.LENGTH_SHORT).show();
+                }
             }
+
         }
 
         return super.onOptionsItemSelected(item);

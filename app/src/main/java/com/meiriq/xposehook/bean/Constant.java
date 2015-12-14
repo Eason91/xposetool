@@ -5,5 +5,6 @@ package com.meiriq.xposehook.bean;
  */
 public class Constant {
 
-    public static String url_getData = "http://m008.meiriq.com/phone/random";
+    public static String url_getDataRandom = "http://m008.meiriq.com/phone/random";
+    public static String url_getDataUsed = "http://m008.meiriq.com/phone/used";
 }
