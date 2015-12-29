@@ -1,11 +1,15 @@
 package com.meiriq.xposehook;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.TextInputLayout;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
@@ -14,20 +18,32 @@ import android.widget.Toast;
 
 import com.meiriq.xposehook.adapter.DataSpinner1Adapter;
 import com.meiriq.xposehook.adapter.DataSpinnerAdapter;
+import com.meiriq.xposehook.bean.Channel;
 import com.meiriq.xposehook.bean.ConfigHelper;
 import com.meiriq.xposehook.bean.DataInfo;
+import com.meiriq.xposehook.dao.LocalDataDao;
 import com.meiriq.xposehook.net.Callback;
 import com.meiriq.xposehook.net.ErrorObject;
+import com.meiriq.xposehook.net.control.ChannelService;
 import com.meiriq.xposehook.net.control.DataService;
+import com.meiriq.xposehook.utils.DateUtil;
 import com.meiriq.xposehook.utils.DialogUtil;
+import com.meiriq.xposehook.utils.L;
+import com.meiriq.xposehook.utils.SP;
 import com.meiriq.xposehook.utils.XposeUtil;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class SetDataActivity extends BaseActivity {
+public class SetDataActivity extends BaseActivity implements SwipeRefreshLayout.OnRefreshListener {
+    private static final String[] DAY = {"留存(今天):1","留存(昨天):2","留存:3","留存:4","留存:5","留存:6","留存:7"};
+    private static final String[] HOURS = {"00","01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23"};
+    private static final String[] MINUTE_AND_SECOND = {"00","10","20","30","40","50"};
+
+    public static final int LOCAL_DATA = 0x1 << 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,23 +57,61 @@ public class SetDataActivity extends BaseActivity {
 
         XposeUtil.initConfigMap();
 
+        getChannelName();
+
+
     }
 
-    int mPositionChannel = 0;
-    int mPositionTime = 0;
-    private List<String> listsChannel;
-    private void setActionBar() {
+    ChannelService channelService;
+    private void getChannelName() {
+        mPositionChannel = SP.getInt(SetDataActivity.this, SP.KEY_CHANNEL);
+        channelList = ConfigHelper.loadChannel(this);
+        channelService = new ChannelService(this);
+        channelService.setCallback(new Callback() {
+            @Override
+            public void onStart() {
+                showLoadingProgressDialog();
+            }
 
-        ActionBar actionBar = getSupportActionBar();
-        actionBar.setDisplayShowCustomEnabled(true);
-        actionBar.setDisplayShowTitleEnabled(false);
-        actionBar.setCustomView(R.layout.actionbar_custom_spinner);
-        Spinner spinner = (Spinner) actionBar.getCustomView().findViewById(R.id.spinner);
+            @Override
+            public void onSuccess(Object object) {
+                dismissProgressDialog();
+                mSwipeRefreshLayout.setRefreshing(false);
+                channelList = (List<Channel>) object;
+                Log.d("unlock","刷新数据"+channelList.toString());
+                ConfigHelper.saveChannel(SetDataActivity.this,channelList);
+                setChannelName();
+            }
+
+            @Override
+            public void onError(ErrorObject error) {
+                mSwipeRefreshLayout.setRefreshing(false);
+                dismissProgressDialog();
+                channelList = Channel.getDefaultChannels();
+                Log.d("unlock","刷新数据"+error.toString());
+
+                setChannelName();
+                Toast.makeText(SetDataActivity.this, "获取渠道名失败", Toast.LENGTH_SHORT).show();
+            }
+        });
+        if(channelList == null){
+            channelService.getChannelName();
+        }else{
+            setChannelName();
+        }
+    }
+
+    private void setChannelName() {
+        adapter.setData(channelList);
+        adapter.notifyDataSetChanged();
+
+        spinner.setSelection(mPositionChannel);
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                mPositionChannel = position;
-
+                if (position != mPositionChannel) {
+                    mPositionChannel = position;
+                }
             }
 
             @Override
@@ -65,14 +119,37 @@ public class SetDataActivity extends BaseActivity {
 
             }
         });
-        DataSpinnerAdapter adapter = new DataSpinnerAdapter(this);
-        listsChannel = new ArrayList<>();
-        listsChannel.add("渠道:zy");
-        listsChannel.add("渠道:gm");
-        listsChannel.add("渠道:qd");
-        adapter.setData(listsChannel);
-        spinner.setAdapter(adapter);
     }
+
+    List<Channel> channelList;
+    int mPositionChannel = 0;
+    int mPositionDay = 0;
+    int mPositionHour = 0;
+    int mPositionMinute = 0;
+    int mPositionHourTo = 0;
+    int mPositionMinuteTo = 0;
+    DataSpinnerAdapter adapter;
+    Spinner spinner;
+    private void setActionBar() {
+
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayShowCustomEnabled(true);
+        actionBar.setDisplayShowTitleEnabled(false);
+        actionBar.setCustomView(R.layout.actionbar_custom_spinner);
+        spinner = (Spinner) actionBar.getCustomView().findViewById(R.id.spinner);
+        adapter = new DataSpinnerAdapter(this);
+        spinner.setAdapter(adapter);
+
+
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+
+        return super.dispatchTouchEvent(ev);
+    }
+
+
 
     private EditText mDeviceId;
     private EditText mAndroidId;
@@ -104,38 +181,20 @@ public class SetDataActivity extends BaseActivity {
     EditText mBluetoothAddress;
     EditText mInternalIp;
     DataService dataService;
-    List<String> listsTime;
+    SwipeRefreshLayout mSwipeRefreshLayout;
+    LocalDataDao localDataDao;
     private void initView() {
 
+        mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipeRefreshLayout);
+        mSwipeRefreshLayout.setOnRefreshListener(this);
+
+        localDataDao = new LocalDataDao(this);
         dataService = new DataService(this);
 
-        Spinner spinnerTime = (Spinner) findViewById(R.id.spinner_time);
-        DataSpinner1Adapter adapter = new DataSpinner1Adapter(this);
-        listsTime = new ArrayList<>();
-        listsTime.add("留存(今天):1");
-        listsTime.add("留存(昨天):2");
-        listsTime.add("留存:3");
-        listsTime.add("留存:4");
-        listsTime.add("留存:5");
-        listsTime.add("留存:6");
-        listsTime.add("留存:7");
-        adapter.setData(listsTime);
-        spinnerTime.setAdapter(adapter);
-        spinnerTime.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                mPositionTime = position;
-
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
+        initSpinnerView();
 
         TextInputLayout tilDeviceId = (TextInputLayout) findViewById(R.id.til_device_id);
-        tilDeviceId.setHint("序列号");
+        tilDeviceId.setHint("IMEI");
         mDeviceId = tilDeviceId.getEditText();
 
         TextInputLayout tilAndroidId = (TextInputLayout) findViewById(R.id.til_android_id);
@@ -265,11 +324,12 @@ public class SetDataActivity extends BaseActivity {
             @Override
             public void onSuccess(Object object) {
                 dismissProgressDialog();
-                DataInfo tmpdataInfo = (DataInfo) object;
-                if(tmpdataInfo == null){
+                DataInfo data = (DataInfo) object;
+                if(data == null){
                     Toast.makeText(SetDataActivity.this,"当前条件下无数据",Toast.LENGTH_LONG).show();
                 }else{
-                    setDataInfo(tmpdataInfo);
+                    dataInfo = data;
+                    setDataInfo(dataInfo);
                 }
             }
 
@@ -282,6 +342,99 @@ public class SetDataActivity extends BaseActivity {
 
 
     }
+
+    private void initSpinnerView() {
+        Spinner spinnerDay = (Spinner) findViewById(R.id.spinner_days);
+        final DataSpinner1Adapter adapterDay = new DataSpinner1Adapter(this);
+        mPositionDay = SP.getInt(this, SP.KEY_DAY);
+        adapterDay.setData(DAY);
+        spinnerDay.setAdapter(adapterDay);
+        spinnerDay.setSelection(mPositionDay, true);
+        spinnerDay.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                L.debug("position"+position);
+                if(position != mPositionDay){
+                    mPositionDay = position;
+                }
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+        Spinner spinnerHour = (Spinner) findViewById(R.id.spinner_hours);
+        final DataSpinner1Adapter adapterHour = new DataSpinner1Adapter(this);
+        mPositionHour = SP.getInt(this,SP.KEY_HOUR);
+        adapterHour.setData(HOURS);
+        spinnerHour.setAdapter(adapterHour);
+        spinnerHour.setSelection(mPositionHour,true);
+        spinnerHour.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if(position != mPositionHour){
+                    mPositionHour = position;
+                }
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+
+        Spinner spinnerMinute = (Spinner) findViewById(R.id.spinner_minutes);
+        final DataSpinner1Adapter adapterMinute = new DataSpinner1Adapter(this);
+        mPositionMinute = SP.getInt(this,SP.KEY_MINUTE);
+        adapterMinute.setData(MINUTE_AND_SECOND);
+        spinnerMinute.setAdapter(adapterMinute);
+        spinnerMinute.setSelection(mPositionMinute,true);
+        spinnerMinute.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if(position != mPositionMinute){
+                    mPositionMinute = position;
+                }
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+
+        Spinner spinnerMinuteTo = (Spinner) findViewById(R.id.spinner_minutes_to);
+        final DataSpinner1Adapter adapterMinuteTo = new DataSpinner1Adapter(this);
+        mPositionMinuteTo = SP.getInt(this,SP.KEY_MINUTE_TO);
+        adapterMinuteTo.setData(MINUTE_AND_SECOND);
+        spinnerMinuteTo.setAdapter(adapterMinuteTo);
+        spinnerMinuteTo.setSelection(mPositionMinuteTo,true);
+        spinnerMinuteTo.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if(position != mPositionMinuteTo){
+                    mPositionMinuteTo = position;
+                }
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+
+        Spinner spinnerHourTo = (Spinner) findViewById(R.id.spinner_hours_to);
+        final DataSpinner1Adapter adapterHourTo = new DataSpinner1Adapter(this);
+        mPositionHourTo = SP.getInt(this,SP.KEY_HOUR_TO);
+        adapterHourTo.setData(HOURS);
+        spinnerHourTo.setAdapter(adapterHour);
+        spinnerHourTo.setSelection(mPositionHourTo,true);
+        spinnerHourTo.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if(position != mPositionHourTo){
+                    mPositionHourTo = position;
+                }
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+    }
+
     private DataInfo dataInfo;
 
     @Override
@@ -300,36 +453,52 @@ public class SetDataActivity extends BaseActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_save) {
+            updateDataInfo();
+            setDataToLocal();
             saveDataInfo();
             XposeUtil.saveConfigMap();
             Toast.makeText(this,"保存成功",Toast.LENGTH_SHORT).show();
 
         }else if(id ==R.id.action_get){
-            String channel = listsChannel.get(mPositionChannel);
-            String time = listsTime.get(mPositionTime);
-            String[] splittime = time.split(":");
-            String[] splitchannel = channel.split(":");
-            if(mPositionTime == 0){
-                if(splittime.length == 2){
-                    dataService.getSetDateNew(splitchannel[1]);
+            String channel = channelList.get(mPositionChannel).getName();
+            String day = DAY[mPositionDay];
+            String[] splitDay = day.split(":");
+            if(mPositionDay == 0){
+                if(splitDay.length == 2){
+                    dataService.getSetDateNew(channel);
                 }else{
                     Toast.makeText(this,"参数失效",Toast.LENGTH_SHORT).show();
                 }
             }else{
-                if(splitchannel.length == 2 && splittime.length == 2){
-                    dataService.getSetDataUsed(splitchannel[1], Integer.parseInt(splittime[1]) - 1);
+                if(splitDay.length == 2){
+                    dataService.getSetDataUsed(channel, Integer.parseInt(splitDay[1]) - 1 ,HOURS[mPositionHour],MINUTE_AND_SECOND[mPositionMinute],HOURS[mPositionHourTo],MINUTE_AND_SECOND[mPositionMinuteTo]);
                 }else{
                     Toast.makeText(this,"参数失效",Toast.LENGTH_SHORT).show();
                 }
             }
 
+        }else if(id == R.id.action_get_local){
+            startActivityForResult(new Intent(this, LocalDataActivity.class), LOCAL_DATA);
         }
 
         return super.onOptionsItemSelected(item);
     }
 
-    private void saveDataInfo() {
+    /**
+     * 将数据保存到本地数据库
+     */
+    private void setDataToLocal(){
+        L.debug("保存数据"+dataInfo.toString());
+        if(dataInfo != null){
+            dataInfo.setUseTime(DateUtil.getCurDate());
+            localDataDao.add(this.dataInfo);
+        }
+    }
 
+    /**
+     * 保存信息到hashmap
+     */
+    private void saveDataInfo() {
         jsonPut(XposeUtil.m_deviceId, mDeviceId.getText().toString().trim());
         jsonPut(XposeUtil.m_androidId, mAndroidId.getText().toString().trim());
         jsonPut(XposeUtil.m_bluetoothaddress, mBluetoothAddress.getText().toString().trim());
@@ -447,6 +616,13 @@ public class SetDataActivity extends BaseActivity {
     }
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        localDataDao.close();
+
+    }
+
+    @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
 
         if(keyCode == KeyEvent.KEYCODE_BACK){
@@ -461,10 +637,34 @@ public class SetDataActivity extends BaseActivity {
     @Override
     public void back() {
 
+        SP.set(SP.KEY_CHANNEL,mPositionChannel);
+        SP.set(SP.KEY_DAY,mPositionDay);
+        SP.set(SP.KEY_HOUR,mPositionHour);
+        SP.set(SP.KEY_HOUR_TO,mPositionHourTo);
+        SP.set(SP.KEY_MINUTE,mPositionMinute);
+        SP.set(SP.KEY_MINUTE_TO, mPositionMinuteTo);
+
         updateDataInfo();
+        setDataToLocal();
         ConfigHelper.saveDataInfo(this, dataInfo);
         saveDataInfo();
         XposeUtil.saveConfigMap();
         Toast.makeText(this,"保存成功",Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onRefresh() {
+        Log.d("unlock","刷新数据");
+        channelService.getChannelName();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == LOCAL_DATA && resultCode == RESULT_OK){
+            //intent.putExtra(LocalDataDetailActivity.DATA,localDataDetail.get(position));
+            DataInfo dataInfo = (DataInfo) data.getSerializableExtra(LocalDataDetailActivity.DATA);
+            setDataInfo(dataInfo);
+        }
     }
 }

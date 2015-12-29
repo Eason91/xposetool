@@ -83,7 +83,8 @@ public class FindApkWhiteActivity extends BaseActivity {
     }
 
     private void saveWhiteApk() {
-        whiteApkDao.clean();
+        if(allApkInfos.size()>0)
+            whiteApkDao.clean();
         for (int i = allApkInfos.size()-1; i >=0; i--) {
             ApkInfo apkInfo = allApkInfos.get(i);
             if (!apkInfo.isSelect()){

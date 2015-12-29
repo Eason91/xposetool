@@ -27,6 +27,7 @@ import java.util.Set;
 public class RecordAppFileActivity extends BaseActivity implements CompoundButton.OnCheckedChangeListener{
 
     private static final int REQ_CHOOSEAPP = 0x1 << 1;
+    private static final int REQ_FILEWHITE = 0x1 << 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +44,7 @@ public class RecordAppFileActivity extends BaseActivity implements CompoundButto
     private EditText editText;
     private AppCompatCheckBox checkBox;
     private List<String> pkgList;
+    List<String> lists;
     private void initView() {
         TextInputLayout textInputLayout = (TextInputLayout) findViewById(R.id.til_appinfo);
         textInputLayout.setHint("请选择应用");
@@ -61,7 +63,7 @@ public class RecordAppFileActivity extends BaseActivity implements CompoundButto
             RecordFileUtil.getFileRecord(pkgList.get(i));
         }
         Set<String> strings = RecordFileUtil.fileMap.keySet();
-        List<String> lists = new ArrayList<>();
+        lists = new ArrayList<>();
         lists.addAll(strings);
 
         adapter = new FileListAdapter(this);
@@ -142,6 +144,10 @@ public class RecordAppFileActivity extends BaseActivity implements CompoundButto
             delete();
         }else if(id == R.id.action_add){
             startActivityForResult(new Intent(this,RecordAppFileChooseActivity.class),REQ_CHOOSEAPP);
+        }else if(id == R.id.action_white){
+            Intent intent = new Intent(this,RecordFileWhiteActivity.class);
+            intent.putStringArrayListExtra(RecordFileWhiteActivity.DATA, (ArrayList<String>) lists);
+            startActivityForResult(intent, REQ_FILEWHITE);
         }
 
         return super.onOptionsItemSelected(item);
@@ -156,6 +162,7 @@ public class RecordAppFileActivity extends BaseActivity implements CompoundButto
         }
         Toast.makeText(this,"删除成功",Toast.LENGTH_SHORT).show();
         RecordFileUtil.fileMap.clear();
+        lists.clear();
         adapter.clearData();
         adapter.notifyDataSetChanged();
     }
@@ -172,6 +179,9 @@ public class RecordAppFileActivity extends BaseActivity implements CompoundButto
         super.onActivityResult(requestCode, resultCode, data);
         if(requestCode == REQ_CHOOSEAPP){
             setEdit();
+        }else if(requestCode == REQ_FILEWHITE){
+            adapter.updateWhite();
+            adapter.notifyDataSetChanged();
         }
     }
 

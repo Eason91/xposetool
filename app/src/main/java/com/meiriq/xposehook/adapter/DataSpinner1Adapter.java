@@ -10,6 +10,7 @@ import android.widget.TextView;
 import com.meiriq.xposehook.R;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -31,6 +32,9 @@ public class DataSpinner1Adapter extends BaseAdapter{
 
     public void setData(List<String> datas){
         channels.addAll(datas);
+    }
+    public void setData(String [] datas){
+        channels.addAll(Arrays.asList(datas));
     }
 
     public void clear(){
@@ -57,7 +61,6 @@ public class DataSpinner1Adapter extends BaseAdapter{
         if (convertView == null) {
             convertView = inflater.inflate(R.layout.spinner_layout_head1, parent, false);
         }
-
         ((TextView) convertView).setText(channels.get(position));
 
         return convertView;

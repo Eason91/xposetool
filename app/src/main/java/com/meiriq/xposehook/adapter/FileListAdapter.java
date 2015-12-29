@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 
 import com.meiriq.xposehook.R;
 import com.meiriq.xposehook.bean.AppInfo;
+import com.meiriq.xposehook.utils.RecordFileUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,9 +22,18 @@ import java.util.List;
 public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.MyViewHolder>{
     private List<String> fileInfos;
     private LayoutInflater inflater;
+    private Context mContext;
+    private ArrayList<String> whiteFileRecord;
     public FileListAdapter(Context context) {
         fileInfos = new ArrayList<>();
+        this.mContext = context;
         this.inflater = LayoutInflater.from(context);
+        whiteFileRecord = RecordFileUtil.getWhiteFileRecord();
+    }
+
+    public void updateWhite(){
+        whiteFileRecord.clear();
+        whiteFileRecord = RecordFileUtil.getWhiteFileRecord();
     }
 
     public void setData(List<String> a){
@@ -49,6 +59,11 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.MyView
     public void onBindViewHolder(final MyViewHolder holder,final int position) {
 //        L.debug("position"+position);
         holder.textView.setText(fileInfos.get(position));
+        if(whiteFileRecord.contains(fileInfos.get(position))){
+            holder.textView.setBackgroundColor(mContext.getResources().getColor(R.color.colorAccent));
+        }else{
+            holder.textView.setBackground(null);
+        }
     }
 
     @Override

@@ -1,17 +1,17 @@
 package com.meiriq.xposehook.adapter;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.meiriq.xposehook.R;
+import com.meiriq.xposehook.bean.Channel;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -21,7 +21,8 @@ public class DataSpinnerAdapter extends BaseAdapter{
 
     private Context mContext;
     private LayoutInflater inflater;
-    private List<String> channels;
+    private List<Channel> channels;
+    private int mPosition = 0;
 
     private DataSpinnerAdapter(){};
 
@@ -31,9 +32,15 @@ public class DataSpinnerAdapter extends BaseAdapter{
         channels = new ArrayList<>();
     }
 
-    public void setData(List<String> datas){
+    public void setData(List<Channel> datas){
+        channels.clear();
         channels.addAll(datas);
     }
+
+//    public void setData(String [] datas){
+//        channels.addAll(Arrays.asList(datas));
+//    }
+
 
     public void clear(){
         channels.clear();
@@ -60,7 +67,7 @@ public class DataSpinnerAdapter extends BaseAdapter{
             convertView = inflater.inflate(R.layout.spinner_layout_head, parent, false);
         }
 
-        ((TextView) convertView).setText(channels.get(position));
+        ((TextView) convertView).setText(channels.get(position).getName());
 
         return convertView;
     }
@@ -72,7 +79,7 @@ public class DataSpinnerAdapter extends BaseAdapter{
         }
 
         TextView title = (TextView) convertView.findViewById(R.id.title);
-        title.setText(channels.get(position));
+        title.setText(channels.get(position).getName());
 
 //        ImageView icon = (ImageView) convertView.findViewById(R.id.icon);
 //        icon.setImageResource(spinnerIcons[position]);

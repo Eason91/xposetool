@@ -72,4 +72,7 @@
     <string name="title_activity_record_app_file">记录文件生成</string>
     <string name="title_activity_record_appchoose">程序选择</string>
     <string name="title_activity_set_data">SetDataActivity</string>
+    <string name="title_activity_record_file_white">RecordFileWhiteActivity</string>
+    <string name="title_activity_local_data">LocalDataActivity</string>
+    <string name="title_activity_local_data_detail">LocalDataDetailActivity</string>
 </resources>

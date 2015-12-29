@@ -89,6 +89,9 @@ public class XposeHook implements IXposedHookLoadPackage{
         addHook(loadPackageParam.packageName, "android.app.ApplicationPackageManager", loadPackageParam.classLoader, "getApplicationInfo", new Object[]{String.class.getName(),Integer.TYPE.getName()});
         addHook(loadPackageParam.packageName, "android.app.ApplicationPackageManager", loadPackageParam.classLoader, "getInstalledApplications", new Object[]{Integer.TYPE.getName()});
 
+        addHook(loadPackageParam.packageName, "android.os.SystemProperties", loadPackageParam.classLoader, "get", new Object[]{String.class.getName()});
+        addHook(loadPackageParam.packageName, "android.content.ContextWrapper", loadPackageParam.classLoader, "getExternalCacheDir", new Object[]{});
+
 
 
 
@@ -162,6 +165,25 @@ public class XposeHook implements IXposedHookLoadPackage{
 
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+
+                if("getExternalCacheDir".equals(methodName) ){
+
+                    File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+File.separator+"xpdownload");
+                    param.setResult(file);
+
+                }else
+
+                if("get".equals(methodName) && className.equals("android.os.SystemProperties")){
+//                    L.log("android.os.SystemProperties");
+                    if(param.args[0].equals("ro.serialno")){
+//                        L.log("android.os.SystemProperties获取序列号");
+                        String serial = XposeUtil.configMap.optString(XposeUtil.m_serial);
+                        if(!TextUtils.isEmpty(serial)){
+                            param.setResult(serial);
+                        }
+                    }
+                }else
+
 //
                 if("getInstalledApplications".equals(methodName) ){
                     List<ApplicationInfo> installedApplications = (List<ApplicationInfo>) param.getResult();
@@ -421,7 +443,7 @@ public class XposeHook implements IXposedHookLoadPackage{
                     if(param.args[0]instanceof File){
                         attr = ((File) param.args[0]).getAbsolutePath();
                         L.debug("attr--1--"+attr);
-                    }else if(param.args[1] != null ){
+                    }else if(param.args.length > 1 && param.args[1] != null ){
                         String separator = "";
                         if(!param.args[0].toString().endsWith("/"))
                             separator = "/";

@@ -53,6 +53,9 @@ public class XposeUtil {
 
     public static JSONObject configMap = new JSONObject();
 
+    /**
+     * 将map信息写入供ｘｐｏｓｅ调用
+     */
     public static void saveConfigMap(){
 
         new Thread(){

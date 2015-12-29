@@ -31,7 +31,6 @@ public class VolleyErrorHandler {
 		try {
 			if (error != null && error.networkResponse != null) {
 				String content = new String(error.networkResponse.data);
-
 				// 有内容
 				if (!TextUtils.isEmpty(content)) {
 					JSONObject jsonObject = new JSONObject(content);

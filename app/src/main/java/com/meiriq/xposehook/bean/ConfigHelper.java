@@ -6,6 +6,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 配置工具类
@@ -16,6 +18,7 @@ public class ConfigHelper {
     private static ConfigHelper configHelper;
     private static final String CONFIG = "config";
     private static final String DATAINFO = "datainfo";
+    private static final String CHANNEL = "channel";
     private static Config config ;
 
     private ConfigHelper(){};
@@ -105,6 +108,39 @@ public class ConfigHelper {
             dataInfo = new DataInfo();
 
         return dataInfo;
+    }
+
+    public static void saveChannel(Context context,List<Channel>channels){
+        File file = new File(context.getFilesDir(), CHANNEL);
+        if(file.exists()){
+            file.delete();
+        }
+        try {
+            ObjectOutputStream outputStream = new ObjectOutputStream(context.openFileOutput(CHANNEL,Context.MODE_PRIVATE));
+            outputStream.writeObject(channels);
+            outputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static List<Channel> loadChannel(Context context){
+        List<Channel>channels = null;
+        File file = new File(context.getFilesDir(),CHANNEL);
+        if(file.exists()){
+            try {
+                ObjectInputStream inputStream = new ObjectInputStream(context.openFileInput(CHANNEL));
+                channels = (List<Channel>) inputStream.readObject();
+                inputStream.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+
+            }
+        }
+//        if(channels == null)
+//            channels = new ArrayList<>();
+
+        return channels;
     }
 
 }

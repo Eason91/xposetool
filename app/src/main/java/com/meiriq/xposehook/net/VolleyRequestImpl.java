@@ -13,6 +13,7 @@ import com.android.volley.Response.Listener;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
+import com.meiriq.xposehook.utils.L;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -118,6 +119,11 @@ public class VolleyRequestImpl implements VolleyRequest {
 		jsonRequest(Method.PUT, url, params, body, listener);
 	}
 
+	public void deleteJsonRequest(String url, Map<String, String> params,
+								  VolleyListener listener) {
+		stringRequest(Method.DELETE, url, params, listener);
+	}
+
 	@Override
 	public void stringRequest(int method, String url,
 			Map<String, String> params, final VolleyListener listener) {
@@ -127,8 +133,9 @@ public class VolleyRequestImpl implements VolleyRequest {
 			@Override
 			public void onResponse(String response) {
 				try {
+					L.debug("++"+response+"++");
 					// 完成响应
-					listener.onComplete(new JSONObject(response));
+					listener.onComplete(new JSONObject(response.trim()));
 				} catch (JSONException e) {
 					e.printStackTrace();
 				}

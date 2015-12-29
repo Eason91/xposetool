@@ -12,7 +12,10 @@ import android.view.View;
 
 import com.meiriq.xposehook.adapter.AppListAdapter;
 import com.meiriq.xposehook.bean.AppInfo;
+import com.meiriq.xposehook.bean.ConfigHelper;
+import com.meiriq.xposehook.dao.LocalDataDao;
 import com.meiriq.xposehook.dao.WhiteUninstallDao;
+import com.meiriq.xposehook.net.control.DataService;
 import com.meiriq.xposehook.tutorial.AppUtils;
 
 import java.util.List;
@@ -29,6 +32,7 @@ public class UninstallActivity extends BaseActivity {
     private AppListAdapter adapter;
     private WhiteUninstallDao whiteUninstallDao;
 
+    private DataService dataService;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,6 +40,8 @@ public class UninstallActivity extends BaseActivity {
         initActionBar();
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        dataService = new DataService(this);
+
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View view) {
@@ -51,6 +57,7 @@ public class UninstallActivity extends BaseActivity {
                     AppUtils.getInstance().uninstall(installApps, UninstallActivity.this, view);
                 } else {
                     Snackbar.make(view, "没有选择程序!!!", Snackbar.LENGTH_SHORT).show();
+                    dataService.sendDataDeprecated(UninstallActivity.this,ConfigHelper.loadDataInfo(UninstallActivity.this).getId());
                 }
             }
         });
@@ -62,10 +69,8 @@ public class UninstallActivity extends BaseActivity {
 
     private void initData() {
         installApps = AppUtils.getInstance().getInstallApps(this, AppUtils.APP_TYPE_CUSTOM);
-//        canUninstallApps = new ArrayList<>();
         whiteApps = whiteUninstallDao.getAllData();
 
-//        updateCanUninstallApp();
         setAppTrueWhenLocalHave(installApps, whiteApps);
         adapter = new AppListAdapter(this);
         adapter.setData(installApps);

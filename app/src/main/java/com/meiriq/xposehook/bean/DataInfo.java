@@ -7,6 +7,8 @@ import java.io.Serializable;
  */
 public class DataInfo implements Serializable{
 
+    private String id;
+
     private String deviceId;
     private String androidId;
     private String phoneNum;
@@ -42,6 +44,41 @@ public class DataInfo implements Serializable{
     private String bluetoothAddress;
     private String internalIp;
 
+    private String saveTime;//保存时间，精确到天
+    private String useTime;//使用时间，精确到天，当天时候时，更新到那一天，用来判断那一天的有没有使用这个数据
+    private long detailTime;//详细时间，精确到秒
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getSaveTime() {
+        return saveTime;
+    }
+
+    public void setSaveTime(String saveTime) {
+        this.saveTime = saveTime;
+    }
+
+    public String getUseTime() {
+        return useTime;
+    }
+
+    public void setUseTime(String useTime) {
+        this.useTime = useTime;
+    }
+
+    public long getDetailTime() {
+        return detailTime;
+    }
+
+    public void setDetailTime(long detailTime) {
+        this.detailTime = detailTime;
+    }
 
     public String getDeviceId() {
         return deviceId;
@@ -273,5 +310,45 @@ public class DataInfo implements Serializable{
 
     public void setInternalIp(String internalIp) {
         this.internalIp = internalIp;
+    }
+
+
+    @Override
+    public String toString() {
+        return "DataInfo{" +
+                "id='" + id + '\'' +
+                ", deviceId='" + deviceId + '\'' +
+                ", androidId='" + androidId + '\'' +
+                ", phoneNum='" + phoneNum + '\'' +
+                ", simId='" + simId + '\'' +
+                ", imsi='" + imsi + '\'' +
+                ", operator='" + operator + '\'' +
+                ", netTypeName='" + netTypeName + '\'' +
+                ", netType='" + netType + '\'' +
+                ", phoneType='" + phoneType + '\'' +
+                ", simStatus='" + simStatus + '\'' +
+                ", macAddress='" + macAddress + '\'' +
+                ", routeName='" + routeName + '\'' +
+                ", routeAddress='" + routeAddress + '\'' +
+                ", systemVersion='" + systemVersion + '\'' +
+                ", systemVersionValue='" + systemVersionValue + '\'' +
+                ", systemFramework='" + systemFramework + '\'' +
+                ", screenSize='" + screenSize + '\'' +
+                ", firmwareVersion='" + firmwareVersion + '\'' +
+                ", phoneBrand='" + phoneBrand + '\'' +
+                ", phoneModelNumber='" + phoneModelNumber + '\'' +
+                ", productName='" + productName + '\'' +
+                ", productor='" + productor + '\'' +
+                ", equipmentName='" + equipmentName + '\'' +
+                ", cpu='" + cpu + '\'' +
+                ", hardware='" + hardware + '\'' +
+                ", fingerPrint='" + fingerPrint + '\'' +
+                ", portNumber='" + portNumber + '\'' +
+                ", bluetoothAddress='" + bluetoothAddress + '\'' +
+                ", internalIp='" + internalIp + '\'' +
+                ", saveTime='" + saveTime + '\'' +
+                ", useTime='" + useTime + '\'' +
+                ", detailTime=" + detailTime +
+                '}';
     }
 }
