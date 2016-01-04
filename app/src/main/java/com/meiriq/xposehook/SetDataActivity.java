@@ -1,10 +1,13 @@
 package com.meiriq.xposehook;
 
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
+import android.support.v7.widget.AppCompatButton;
+import android.support.v7.widget.AppCompatCheckBox;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -38,7 +41,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SetDataActivity extends BaseActivity implements SwipeRefreshLayout.OnRefreshListener {
+public class SetDataActivity extends BaseActivity implements SwipeRefreshLayout.OnRefreshListener, View.OnClickListener {
     private static final String[] DAY = {"留存(今天):1","留存(昨天):2","留存:3","留存:4","留存:5","留存:6","留存:7"};
     private static final String[] HOURS = {"00","01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23"};
     private static final String[] MINUTE_AND_SECOND = {"00","10","20","30","40","50"};
@@ -187,6 +190,9 @@ public class SetDataActivity extends BaseActivity implements SwipeRefreshLayout.
 
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipeRefreshLayout);
         mSwipeRefreshLayout.setOnRefreshListener(this);
+
+        AppCompatButton mBt_LocalData = (AppCompatButton) findViewById(R.id.accb_local);
+        mBt_LocalData.setOnClickListener(this);
 
         localDataDao = new LocalDataDao(this);
         dataService = new DataService(this);
@@ -356,6 +362,7 @@ public class SetDataActivity extends BaseActivity implements SwipeRefreshLayout.
                 L.debug("position"+position);
                 if(position != mPositionDay){
                     mPositionDay = position;
+
                 }
             }
             @Override
@@ -478,7 +485,17 @@ public class SetDataActivity extends BaseActivity implements SwipeRefreshLayout.
             }
 
         }else if(id == R.id.action_get_local){
-            startActivityForResult(new Intent(this, LocalDataActivity.class), LOCAL_DATA);
+            String day = DAY[mPositionDay];
+            String splitDay = day.split(":")[1];
+            DataInfo localData = localDataDao.getLocalData(DateUtil.getCurDate(Integer.parseInt(splitDay) - 1));
+            if(localData != null){
+                dataInfo = localData;
+                setDataInfo(dataInfo);
+                Toast.makeText(SetDataActivity.this,"获取历史数据",Toast.LENGTH_SHORT).show();
+            }else {
+                Toast.makeText(SetDataActivity.this,"指定天数下没有数据",Toast.LENGTH_SHORT).show();
+            }
+
         }
 
         return super.onOptionsItemSelected(item);
@@ -491,7 +508,12 @@ public class SetDataActivity extends BaseActivity implements SwipeRefreshLayout.
         L.debug("保存数据"+dataInfo.toString());
         if(dataInfo != null){
             dataInfo.setUseTime(DateUtil.getCurDate());
-            localDataDao.add(this.dataInfo);
+            Cursor cursor = localDataDao.queryById(new String[]{dataInfo.getId()});
+            if(cursor == null || !cursor.moveToFirst()){
+                localDataDao.add(this.dataInfo);
+            }else{
+                localDataDao.update(dataInfo, "id = ? and imei = ?", new String[]{dataInfo.getId(), dataInfo.getDeviceId()});
+            }
         }
     }
 
@@ -643,6 +665,7 @@ public class SetDataActivity extends BaseActivity implements SwipeRefreshLayout.
         SP.set(SP.KEY_HOUR_TO,mPositionHourTo);
         SP.set(SP.KEY_MINUTE,mPositionMinute);
         SP.set(SP.KEY_MINUTE_TO, mPositionMinuteTo);
+//        SP.set(SP.KEY_SET_LOCAL, mCheckBox.isChecked());
 
         updateDataInfo();
         setDataToLocal();
@@ -665,6 +688,13 @@ public class SetDataActivity extends BaseActivity implements SwipeRefreshLayout.
             //intent.putExtra(LocalDataDetailActivity.DATA,localDataDetail.get(position));
             DataInfo dataInfo = (DataInfo) data.getSerializableExtra(LocalDataDetailActivity.DATA);
             setDataInfo(dataInfo);
+        }
+    }
+
+    @Override
+    public void onClick(View v) {
+        if(v.getId() == R.id.accb_local){
+            startActivityForResult(new Intent(this, LocalDataActivity.class), LOCAL_DATA);
         }
     }
 }

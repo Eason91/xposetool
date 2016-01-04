@@ -19,10 +19,19 @@
         <Spinner
             android:id="@+id/spinner_days"
             android:padding="10dp"
+            android:layout_weight="1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/data_type_spinner"
             android:dropDownWidth="196dp" />
+
+        <android.support.v7.widget.AppCompatButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:id="@+id/accb_local"
+            android:padding="5dp"
+            android:text="本地数据"/>
 
 
     </LinearLayout>

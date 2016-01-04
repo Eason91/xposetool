@@ -9,7 +9,7 @@ public class L {
     private static boolean isLog = true;
     private static String TAG = "unlock";
     public static void debug(String log){
-        if(true){
+        if(false){
             Log.d(TAG,log);
         }
     }

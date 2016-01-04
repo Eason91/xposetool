@@ -3,16 +3,20 @@ package com.meiriq.xposehook.tutorial;
 import android.app.ActivityManager;
 import android.bluetooth.BluetoothAdapter;
 import android.content.ContentResolver;
+import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
 import android.os.*;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Display;
 
 import com.meiriq.xposehook.utils.L;
@@ -23,6 +27,7 @@ import com.meiriq.xposehook.utils.XposeUtil;
 import java.io.File;
 import java.io.FileReader;
 import java.util.List;
+import java.util.Random;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
@@ -83,6 +88,8 @@ public class XposeHook implements IXposedHookLoadPackage{
 //        addHook(loadPackageParam.packageName, Display.class.getName(), loadPackageParam.classLoader, "getHeight", new Object[]{});
 //        addHook(loadPackageParam.packageName, Resources.class.getName(), loadPackageParam.classLoader, "getDisplayMetrics", new Object[]{});
 
+        addHook(loadPackageParam.packageName, NetworkInfo.class.getName(), loadPackageParam.classLoader, "getTypeName", new Object[]{});
+        addHook(loadPackageParam.packageName, NetworkInfo.class.getName(), loadPackageParam.classLoader, "getType", new Object[]{});
         addHook(loadPackageParam.packageName, ActivityManager.class.getName(), loadPackageParam.classLoader, "getRunningAppProcesses", new Object[]{});
         addHook(loadPackageParam.packageName, "android.app.ApplicationPackageManager", loadPackageParam.classLoader, "getInstalledPackages", new Object[]{Integer.TYPE.getName()});
         addHook(loadPackageParam.packageName, "android.app.ApplicationPackageManager", loadPackageParam.classLoader, "getPackageInfo", new Object[]{String.class.getName(),Integer.TYPE.getName()});
@@ -152,19 +159,36 @@ public class XposeHook implements IXposedHookLoadPackage{
                 if("getPackageInfo".equals(methodName) ){
                     if(param.args[0].equals(XposeUtil.pkg1) || param.args[0].equals(XposeUtil.pkg2) || param.args[0].equals(XposeUtil.pkg3)){
                         param.args[0] = "yyyy.mmmm.aaaa.xxxx";
-                        L.debug("修改参数成功");
                     }
                 }else
                 if("getApplicationInfo".equals(methodName) ){
                     if(param.args[0].equals(XposeUtil.pkg1) || param.args[0].equals(XposeUtil.pkg2) || param.args[0].equals(XposeUtil.pkg3)){
                         param.args[0] = "yyyy.mmmm.aaaa.xxxx";
-                        L.debug("修改参数成功");
                     }
                 }
             }
 
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+
+                if("getTypeName".equals(methodName) || "getType".equals(methodName)){
+                    try{
+                        String deviceid = XposeUtil.configMap.optString(XposeUtil.m_deviceId);
+                        if(!TextUtils.isEmpty(deviceid)){
+                            double anInt = Double.parseDouble(deviceid);
+                            if(anInt % 2 == 0){
+                                if("getTypeName".equals(methodName))
+                                    param.setResult("MOBILE");
+                                else
+                                    param.setResult(ConnectivityManager.TYPE_MOBILE);
+                            }
+                        }
+
+                    }catch (Exception e){
+                        e.printStackTrace();
+                        L.log(e.getMessage());
+                    }
+                }else
 
                 if("getExternalCacheDir".equals(methodName) ){
 

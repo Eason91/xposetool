@@ -3,12 +3,16 @@ package com.meiriq.xposehook.dao;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.os.Environment;
 
 import com.meiriq.xposehook.bean.ApkInfo;
 import com.meiriq.xposehook.bean.DataInfo;
 import com.meiriq.xposehook.bean.util.ApkInfoUtil;
 import com.meiriq.xposehook.bean.util.SetDataUtil;
+import com.meiriq.xposehook.utils.DateUtil;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +25,17 @@ public class LocalDataDao extends BaseDao<DataInfo>{
 
     public LocalDataDao(Context context) {
         super(context);
+        File file = new File(Environment.getExternalStorageDirectory()+"/.xpose/localdata.db");
+
+        if(!file.exists()){
+            mDatabase = SQLiteDatabase.openOrCreateDatabase
+                    (file,null);
+            mDatabase.execSQL(DbHelper.CREATE_LOCAL_DATA_TABLE);
+        }else {
+            mDatabase = SQLiteDatabase.openOrCreateDatabase
+                    (file,null);
+        }
+
     }
 
     @Override
@@ -58,12 +73,50 @@ public class LocalDataDao extends BaseDao<DataInfo>{
         return query(String.format("select * from %s", TABLE_LOCAL_DATA), null);
     }
 
+    public Cursor queryById(String[] args) {
+        return query(String.format("select * from %s where id = ?", TABLE_LOCAL_DATA), args);
+    }
+
+
+    /**
+     * 指定时间的没用过的本地数据
+     * @param args
+     * @return
+     */
     public Cursor queryDateTime(String[] args){
         return query(String.format("select * from %s where savetime = ? and usetime != ?", TABLE_LOCAL_DATA), args);
     }
 
+    /**
+     * 指定时间的所有本地数据
+     * @param args
+     * @return
+     */
+    public Cursor queryDateTimeAll(String[] args){
+        return query(String.format("select * from %s where savetime = ?", TABLE_LOCAL_DATA), args);
+    }
+
+    /**
+     * 本地数据的目录
+     * @param args
+     * @return
+     */
     public Cursor queryDataType(String[] args){
-        return query(String.format("select savetime,count(*) as counts from %s where usetime != ? group by savetime ", TABLE_LOCAL_DATA),args);
+        return query(String.format("select savetime,count(*) as counts from %s group by savetime ", TABLE_LOCAL_DATA),null);
+    }
+
+    /**
+     * 获取指定天数前的某一条数据
+     * @param saveTime
+     * @return
+     */
+    public DataInfo getLocalData(String saveTime){
+        Cursor cursor = queryDateTime(new String[]{saveTime, DateUtil.getCurDate()});
+        ArrayList<DataInfo> dataInfos = SetDataUtil.parseCursor2List(cursor);
+        if(dataInfos.size()>0)
+            return dataInfos.get(0);
+        return null;
+
     }
 
 

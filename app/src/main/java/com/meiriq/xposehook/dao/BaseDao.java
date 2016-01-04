@@ -22,11 +22,12 @@ import java.util.List;
 public abstract class BaseDao<T> {
 
     private DbHelper mDbHelper;
-    private SQLiteDatabase mDatabase;
+    protected SQLiteDatabase mDatabase;
 
     public BaseDao(Context context) {
         mDbHelper = new DbHelper(context);
         mDatabase = mDbHelper.getWritableDatabase();
+
     }
 
     /**

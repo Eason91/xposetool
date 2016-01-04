@@ -61,7 +61,6 @@ public class LocalDataActivity extends BaseActivity {
     private ArrayList<DataStatus> getDataStatus(){
         Cursor cursor = mLocalDataDao.queryDataType(new String[]{DateUtil.getCurDate()});
         ArrayList<DataStatus> dataStatuses = DataStatus.parseCursor2List(cursor);
-        L.debug("dataStatuses"+ dataStatuses.toString());
         return dataStatuses;
     }
 

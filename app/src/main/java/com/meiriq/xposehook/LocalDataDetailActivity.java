@@ -55,7 +55,7 @@ public class LocalDataDetailActivity extends BaseActivity {
 
     private ArrayList<DataInfo> getDataStatus(){
         L.debug(time+"--"+DateUtil.getCurDate());
-        Cursor cursor = mLocalDataDao.queryDateTime(new String[]{time, DateUtil.getCurDate()});
+        Cursor cursor = mLocalDataDao.queryDateTimeAll(new String[]{time});
         ArrayList<DataInfo> dataInfos = SetDataUtil.parseCursor2List(cursor);
         return dataInfos;
     }

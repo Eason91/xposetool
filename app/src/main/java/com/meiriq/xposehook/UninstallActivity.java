@@ -57,7 +57,9 @@ public class UninstallActivity extends BaseActivity {
                     AppUtils.getInstance().uninstall(installApps, UninstallActivity.this, view);
                 } else {
                     Snackbar.make(view, "没有选择程序!!!", Snackbar.LENGTH_SHORT).show();
-                    dataService.sendDataDeprecated(UninstallActivity.this,ConfigHelper.loadDataInfo(UninstallActivity.this).getId());
+                    dataService.sendDataDeprecated(UninstallActivity.this, ConfigHelper.loadDataInfo(UninstallActivity.this).getId());
+                    LocalDataDao localDataDao = new LocalDataDao(UninstallActivity.this);
+                    int delete = localDataDao.delete("id = ?", new String[]{ConfigHelper.loadDataInfo(UninstallActivity.this).getId()});
                 }
             }
         });
