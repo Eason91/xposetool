@@ -33,6 +33,14 @@
             android:padding="5dp"
             android:text="本地数据"/>
 
+        <android.support.v7.widget.AppCompatButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:id="@+id/accb_random"
+            android:padding="5dp"
+            android:text="随机数据"/>
+
 
     </LinearLayout>
 

@@ -193,6 +193,8 @@ public class SetDataActivity extends BaseActivity implements SwipeRefreshLayout.
 
         AppCompatButton mBt_LocalData = (AppCompatButton) findViewById(R.id.accb_local);
         mBt_LocalData.setOnClickListener(this);
+        AppCompatButton mLocalRandom = (AppCompatButton) findViewById(R.id.accb_random);
+        mLocalRandom.setOnClickListener(this);
 
         localDataDao = new LocalDataDao(this);
         dataService = new DataService(this);
@@ -695,6 +697,8 @@ public class SetDataActivity extends BaseActivity implements SwipeRefreshLayout.
     public void onClick(View v) {
         if(v.getId() == R.id.accb_local){
             startActivityForResult(new Intent(this, LocalDataActivity.class), LOCAL_DATA);
+        }else if(v.getId() == R.id.accb_random){
+
         }
     }
 }
