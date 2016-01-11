@@ -15,7 +15,7 @@ import java.util.List;
  */
 public class ClearDataDao extends BaseDao<AppInfo>{
 
-    private final String TABLE_WHITE_UNINSTALL = DbHelper.TABLE_CLEAR_DATA;
+    private final String TABLE_CLEAR_DATA = DbHelper.TABLE_CLEAR_DATA;
 
     public ClearDataDao(Context context) {
         super(context);
@@ -23,7 +23,7 @@ public class ClearDataDao extends BaseDao<AppInfo>{
 
     @Override
     public boolean add(AppInfo item) {
-        return insert(TABLE_WHITE_UNINSTALL, AppInfoUtil.wrapApp2Values(item)) != -1;
+        return insert(TABLE_CLEAR_DATA, AppInfoUtil.wrapApp2Values(item)) != -1;
     }
 
     @Override
@@ -33,27 +33,27 @@ public class ClearDataDao extends BaseDao<AppInfo>{
             values.add(AppInfoUtil.wrapApp2Values(appinfo));
 
         }
-        return insertList(TABLE_WHITE_UNINSTALL, values) != -1;
+        return insertList(TABLE_CLEAR_DATA, values) != -1;
     }
 
     @Override
     public int delete(String whereClause, String[] whereArgs) {
-        return delete(TABLE_WHITE_UNINSTALL,whereClause,whereArgs);
+        return delete(TABLE_CLEAR_DATA,whereClause,whereArgs);
     }
 
     @Override
     public int clean() {
-        return clean(TABLE_WHITE_UNINSTALL);
+        return clean(TABLE_CLEAR_DATA);
     }
 
     @Override
     public int update(AppInfo item, String whereClause, String[] whereArgs) {
-        return update(TABLE_WHITE_UNINSTALL, AppInfoUtil.wrapApp2Values(item), whereClause, whereArgs);
+        return update(TABLE_CLEAR_DATA, AppInfoUtil.wrapApp2Values(item), whereClause, whereArgs);
     }
 
     @Override
     public Cursor query(String[] args) {
-        return query(String.format("select * from %s", TABLE_WHITE_UNINSTALL), null);
+        return query(String.format("select * from %s", TABLE_CLEAR_DATA), null);
     }
 
     /**
@@ -61,7 +61,7 @@ public class ClearDataDao extends BaseDao<AppInfo>{
      * @return
      */
     public List<AppInfo> getAllData(){
-        Cursor cursor = query(String.format("select * from %s", TABLE_WHITE_UNINSTALL), null);
+        Cursor cursor = query(String.format("select * from %s", TABLE_CLEAR_DATA), null);
         List<AppInfo> appInfos = AppInfoUtil.parse2AppInfoList(cursor);
         cursor.close();
         return appInfos;

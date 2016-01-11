@@ -67,7 +67,9 @@ public class XposeUtil {
             }
         }.start();
     }
-
+    /**
+     * 读取文本数据到configMap
+     */
     public static void initConfigMap(){
         try {
             configMap = new JSONObject(getFileData("xposeDevice.txt"));

@@ -507,7 +507,6 @@ public class SetDataActivity extends BaseActivity implements SwipeRefreshLayout.
      * 将数据保存到本地数据库
      */
     private void setDataToLocal(){
-        L.debug("保存数据"+dataInfo.toString());
         if(dataInfo != null){
             dataInfo.setUseTime(DateUtil.getCurDate());
             Cursor cursor = localDataDao.queryById(new String[]{dataInfo.getId()});
