@@ -36,6 +36,23 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.MyViewHo
         this.appInfos.addAll(a);
     }
 
+    public void setSelect(boolean select){
+        int size = appInfos.size();
+        for (int i = 0; i < size; i++) {
+            appInfos.get(i).setIsSelect(select);
+        }
+    }
+
+    public boolean isAllSelect(){
+        boolean select = true;
+        for(int j = 0; j < appInfos.size(); j++){
+            if(!appInfos.get(j).isSelect()){
+                select = false;
+            }
+        }
+        return select;
+    }
+
     @Override
     public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         MyViewHolder viewHolder = new MyViewHolder(inflater.inflate(R.layout.item_uninstall_applist,parent,false));

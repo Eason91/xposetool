@@ -25,7 +25,10 @@ public class LocalDataDao extends BaseDao<DataInfo>{
 
     public LocalDataDao(Context context) {
         super(context);
-        File file = new File(Environment.getExternalStorageDirectory()+"/.xpose/localdata.db");
+        File file = new File(Environment.getExternalStorageDirectory()+"/.xpose/");
+        if(!file.exists())
+            file.mkdir();
+        file = new File(file,"localdata.db");
 
         if(!file.exists()){
             mDatabase = SQLiteDatabase.openOrCreateDatabase

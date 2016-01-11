@@ -1,11 +1,14 @@
 package com.meiriq.xposehook;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.KeyEvent;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
@@ -14,6 +17,7 @@ import com.meiriq.xposehook.bean.AppInfo;
 import com.meiriq.xposehook.dao.ClearDataDao;
 import com.meiriq.xposehook.tutorial.AppUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ClearDataActivity extends BaseActivity {
@@ -80,9 +84,25 @@ public class ClearDataActivity extends BaseActivity {
             case android.R.id.home:
                 saveWhiteApp();
                 break;
+            case R.id.action_cancel:
+                boolean allSelect = adapter.isAllSelect();
+                adapter.setSelect(!allSelect);
+                if(allSelect)
+                    item.setTitle("全选");
+                else
+                    item.setTitle("反选");
+                adapter.notifyDataSetChanged();
+                break;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.clear_data, menu);
+        return true;
     }
 
     @Override
@@ -99,10 +119,11 @@ public class ClearDataActivity extends BaseActivity {
 
     //增加白名单数据
     private void saveWhiteApp() {
-        clearDataDao.clean();
+//        clearDataDao.clean();
         for (int i = installApps.size()-1; i >=0; i--) {
             AppInfo appInfo = installApps.get(i);
             if (!appInfo.isSelect()){
+                clearDataDao.delete("pkgname = ?", new String[]{appInfo.getPname()});
                 installApps.remove(i);
             }
         }
