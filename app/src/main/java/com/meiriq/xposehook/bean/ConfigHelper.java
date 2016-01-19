@@ -19,6 +19,7 @@ public class ConfigHelper {
     private static final String CONFIG = "config";
     private static final String DATAINFO = "datainfo";
     private static final String CHANNEL = "channel";
+
     private static Config config ;
 
     private ConfigHelper(){};
@@ -137,9 +138,6 @@ public class ConfigHelper {
 
             }
         }
-//        if(channels == null)
-//            channels = new ArrayList<>();
-
         return channels;
     }
 

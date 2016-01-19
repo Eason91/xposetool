@@ -5,12 +5,14 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Environment;
+import android.util.Log;
 
 import com.meiriq.xposehook.bean.ApkInfo;
 import com.meiriq.xposehook.bean.DataInfo;
 import com.meiriq.xposehook.bean.util.ApkInfoUtil;
 import com.meiriq.xposehook.bean.util.SetDataUtil;
 import com.meiriq.xposehook.utils.DateUtil;
+import com.meiriq.xposehook.utils.L;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -80,6 +82,14 @@ public class LocalDataDao extends BaseDao<DataInfo>{
         return query(String.format("select * from %s where id = ?", TABLE_LOCAL_DATA), args);
     }
 
+    public int queryInWhichDayCount(String[] args){
+        return query(String.format("select * from %s where savetime = ? and usetime = ?",TABLE_LOCAL_DATA),args).getCount();
+    }
+
+    public int queryDayCount(String[] args){
+        return query(String.format("select * from %s where savetime = ?",TABLE_LOCAL_DATA),args).getCount();
+    }
+
 
     /**
      * 指定时间的没用过的本地数据
@@ -87,7 +97,7 @@ public class LocalDataDao extends BaseDao<DataInfo>{
      * @return
      */
     public Cursor queryDateTime(String[] args){
-        return query(String.format("select * from %s where savetime = ? and usetime != ?", TABLE_LOCAL_DATA), args);
+        return query(String.format("select * from %s where savetime = ? and usetime != ? order by detailtime ASC", TABLE_LOCAL_DATA), args);
     }
 
     /**
@@ -119,7 +129,28 @@ public class LocalDataDao extends BaseDao<DataInfo>{
         if(dataInfos.size()>0)
             return dataInfos.get(0);
         return null;
+    }
 
+    /**
+     * 获取指定某天的数据与其总数据比重是否大于指定weight
+     * @param saveTime
+     * @param weight
+     * @return
+     */
+    public boolean getDataWeight(String saveTime,float weight){
+
+        int useCount = queryInWhichDayCount(new String[]{saveTime, DateUtil.getCurDate()});
+        int allCount = queryDayCount(new String[]{saveTime});
+        if(allCount <= 0){
+            return true;
+        }
+        float v = (float) useCount * 100 / allCount;
+        L.log("useCount"+useCount+"allCount"+allCount+"v"+v+"saveTime"+saveTime);
+        if(v >= weight){
+            return true;
+        }
+
+        return false;
     }
 
 

@@ -22,7 +22,6 @@
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -74,7 +73,7 @@
             android:name=".SetDataActivity"
             android:label="@string/title_activity_set_data"
             android:theme="@style/AppTheme.NoActionBar"
-            android:windowSoftInputMode="stateAlwaysHidden" />
+            android:windowSoftInputMode="adjustPan" />
 
         <service
             android:name="com.umeng.update.net.DownloadingService"
@@ -102,7 +101,14 @@
         <activity
             android:name=".LocalDataDetailActivity"
             android:label="@string/title_activity_local_data_detail"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar"/>
+
+        <activity
+            android:name=".DataKeepStatusActivity"
+            android:label="@string/title_activity_local_data_detail"
+            android:theme="@style/AppTheme.NoActionBar">
+
+        </activity>
     </application>
 
 </manifest>

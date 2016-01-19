@@ -24,16 +24,20 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.MyView
     private LayoutInflater inflater;
     private Context mContext;
     private ArrayList<String> whiteFileRecord;
+    ArrayList<String> whiteFolderFileRecord;
     public FileListAdapter(Context context) {
         fileInfos = new ArrayList<>();
         this.mContext = context;
         this.inflater = LayoutInflater.from(context);
         whiteFileRecord = RecordFileUtil.getWhiteFileRecord();
+        whiteFolderFileRecord = RecordFileUtil.getWhiteFolderFileRecord();
     }
 
     public void updateWhite(){
         whiteFileRecord.clear();
+        whiteFolderFileRecord.clear();
         whiteFileRecord = RecordFileUtil.getWhiteFileRecord();
+        whiteFolderFileRecord = RecordFileUtil.getWhiteFolderFileRecord();
     }
 
     public void setData(List<String> a){
@@ -58,11 +62,16 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.MyView
     @Override
     public void onBindViewHolder(final MyViewHolder holder,final int position) {
 //        L.debug("position"+position);
-        holder.textView.setText(fileInfos.get(position));
+        String s = fileInfos.get(position);
+        holder.textView.setText(s);
+        holder.textView.setBackground(null);
+        for (String whiteFolder: whiteFolderFileRecord) {
+            if(s.contains(whiteFolder)){
+                holder.textView.setBackgroundColor(mContext.getResources().getColor(R.color.colorAccent));
+            }
+        }
         if(whiteFileRecord.contains(fileInfos.get(position))){
             holder.textView.setBackgroundColor(mContext.getResources().getColor(R.color.colorAccent));
-        }else{
-            holder.textView.setBackground(null);
         }
     }
 

@@ -2,6 +2,7 @@ package com.meiriq.xposehook;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.widget.EditText;
 
 import com.meiriq.xposehook.bean.ApkInfo;
 import com.meiriq.xposehook.bean.AppInfo;
@@ -25,6 +26,14 @@ public class BaseActivity extends ToolbarActivity{
     public void dismissProgressDialog(){
         if(progressDialog!=null && progressDialog.isShowing())
             progressDialog.dismiss();
+    }
+
+    public String getTextString(EditText editText) {
+        String result = editText.getText().toString().trim();
+        if(result== null)
+            result = "";
+
+        return result;
     }
 
 

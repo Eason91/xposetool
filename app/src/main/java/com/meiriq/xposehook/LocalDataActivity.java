@@ -53,7 +53,7 @@ public class LocalDataActivity extends BaseActivity {
     }
 
     private void deleteLocalData(){
-        long timeMillis = DateUtil.getTimeMillis(6);
+        long timeMillis = DateUtil.getTimeMillis(9);
         mLocalDataDao.delete("detailtime < ?",new String[]{String.valueOf(timeMillis)});
     }
 

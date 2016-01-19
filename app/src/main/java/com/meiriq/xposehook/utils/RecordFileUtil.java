@@ -35,8 +35,18 @@ public class RecordFileUtil {
         addFileRecord("white", record,true);
     }
 
+    public static void addWhiteFolderRecord(ArrayList<String> records){
+        for (int i = 0; i < records.size(); i++) {
+            addWhiteFolderRecord(records.get(i));
+        }
+    }
+
+    public static void addWhiteFolderRecord(String record){
+        addFileRecord("whitefolder", record,true);
+    }
+
     public static boolean addFileRecord(String packageName,String record,boolean isWhite){
-        L.debug("添加记录"+packageName+"--"+record);
+        L.debug("添加记录" + packageName + "--" + record);
 
         if(TextUtils.isEmpty(record))
             return false;
@@ -121,10 +131,14 @@ public class RecordFileUtil {
     }
 
     public static ArrayList<String> getWhiteFileRecord(){
-        ArrayList<String > records = new ArrayList<>();
-        String message = "";
-        BufferedReader reader = null;
         File file = new File(Environment.getExternalStorageDirectory() + FILE_PATH_RECORD + File.separator + "white");
+        return getStringsFromFile(file);
+    }
+
+    private static ArrayList<String> getStringsFromFile( File file) {
+        String message;
+        ArrayList<String > records = new ArrayList<>();
+        BufferedReader reader = null;
         if(!file.exists())
             return records;
         try {
@@ -145,6 +159,11 @@ public class RecordFileUtil {
             }
         }
         return records;
+    }
+
+    public static ArrayList<String> getWhiteFolderFileRecord(){
+        File file = new File(Environment.getExternalStorageDirectory() + FILE_PATH_RECORD + File.separator + "whitefolder");
+        return getStringsFromFile(file);
     }
 
 
@@ -173,17 +192,37 @@ public class RecordFileUtil {
         return false;
     }
 
+    public static boolean deleteWhiteFolderFile(){
+        File file = new File(Environment.getExternalStorageDirectory() + FILE_PATH_RECORD + File.separator + "whitefolder");
+        if(file.exists()){
+            return file.delete();
+        }
+        return false;
+    }
+
+    /**
+     * 删除除了白名单的所有记录文件
+     */
     public static void deleteFile(){
         Iterator<Map.Entry<String, String>> iterator = fileMap.entrySet().iterator();
         ArrayList whiteFileRecord = getWhiteFileRecord();
+        ArrayList<String> whiteFolderFileRecord = getWhiteFolderFileRecord();
         while (iterator.hasNext()){
             Map.Entry<String, String> entry = iterator.next();
             File file = new File(entry.getKey());
 
             if(file.exists() && file.isFile()){
-                if(!whiteFileRecord.contains(file.getAbsolutePath())){
-                    boolean delete = file.delete();
-                    L.debug("文件删除"+delete+file.getAbsolutePath());
+                String absolutePath = file.getAbsolutePath();
+                for (int i = 0; i < whiteFolderFileRecord.size(); i++) {
+                    //白名单文件夹和白名单文件
+                    if(absolutePath.contains(whiteFolderFileRecord.get(i)) || whiteFileRecord.contains(absolutePath)){
+                        break;
+                    }
+                    //循环到最后一个白名单文件列表项，说明数据可以删除
+                    if(i == whiteFolderFileRecord.size() - 1){
+                        boolean delete = file.delete();
+                        L.debug("文件删除"+delete+absolutePath+"==="+whiteFolderFileRecord.get(i));
+                    }
                 }
             }
         }

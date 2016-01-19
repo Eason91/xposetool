@@ -95,6 +95,9 @@ public class FindApkActivity extends BaseActivity {
 
     private void reSearch(File file){
         File[] files = file.listFiles(APK_FILTER);
+        if(files == null){
+            return;
+        }
         for (int i = 0; i < files.length; i++) {
             if(files[i].isDirectory()){
                 reSearch(files[i]);

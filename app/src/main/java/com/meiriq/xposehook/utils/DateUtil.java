@@ -1,5 +1,6 @@
 package com.meiriq.xposehook.utils;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -33,6 +34,21 @@ public class DateUtil {
 
     public static String getCurTime(long time){
         return format.format(new Date(time));
+    }
+
+    /**
+     * 和getCurTime匹配相互转换
+     * @param time
+     * @return
+     */
+    public static long getCurrLongTime(String time){
+        try {
+            Date date = format.parse(time);
+            return date.getTime();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 
     /**

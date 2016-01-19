@@ -48,5 +48,6 @@ dependencies {
     compile 'com.android.support:recyclerview-v7:22.2.1'
     compile 'com.android.support:cardview-v7:22.2.1'
     compile 'com.mcxiaoke.volley:library:1.0.19'
+    compile 'com.wdullaer:materialdatetimepicker:2.1.1'
     provided files('lib/XposedBridgeApi-54.jar')
 }

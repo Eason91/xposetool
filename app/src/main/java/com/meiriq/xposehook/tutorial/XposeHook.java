@@ -83,12 +83,12 @@ public class XposeHook implements IXposedHookLoadPackage{
 //        addHookMethod(loadPackageParam.packageName, Display.class.getName(), loadPackageParam.classLoader, "getHeight", new Object[]{});
 //        addHookMethod(loadPackageParam.packageName, Resources.class.getName(), loadPackageParam.classLoader, "getDisplayMetrics", new Object[]{});
 
-        addHookMethod(loadPackageParam.packageName, NetworkInfo.class.getName(), loadPackageParam.classLoader, "getTypeName", new Object[]{});
-        addHookMethod(loadPackageParam.packageName, NetworkInfo.class.getName(), loadPackageParam.classLoader, "getType", new Object[]{});
-        addHookMethod(loadPackageParam.packageName, NetworkInfo.class.getName(), loadPackageParam.classLoader, "getSubtype", new Object[]{});
-        addHookMethod(loadPackageParam.packageName, NetworkInfo.class.getName(), loadPackageParam.classLoader, "getSubtypeName", new Object[]{});
-        addHookMethod(loadPackageParam.packageName, NetworkInfo.class.getName(), loadPackageParam.classLoader, "getExtraInfo", new Object[]{});
-        addHookMethod(loadPackageParam.packageName, ConnectivityManager.class.getName(), loadPackageParam.classLoader, "getNetworkInfo", new Object[]{Integer.TYPE.getName()});
+//        addHookMethod(loadPackageParam.packageName, NetworkInfo.class.getName(), loadPackageParam.classLoader, "getTypeName", new Object[]{});
+//        addHookMethod(loadPackageParam.packageName, NetworkInfo.class.getName(), loadPackageParam.classLoader, "getType", new Object[]{});
+//        addHookMethod(loadPackageParam.packageName, NetworkInfo.class.getName(), loadPackageParam.classLoader, "getSubtype", new Object[]{});
+//        addHookMethod(loadPackageParam.packageName, NetworkInfo.class.getName(), loadPackageParam.classLoader, "getSubtypeName", new Object[]{});
+//        addHookMethod(loadPackageParam.packageName, NetworkInfo.class.getName(), loadPackageParam.classLoader, "getExtraInfo", new Object[]{});
+//        addHookMethod(loadPackageParam.packageName, ConnectivityManager.class.getName(), loadPackageParam.classLoader, "getNetworkInfo", new Object[]{Integer.TYPE.getName()});
 
         addHookMethod(loadPackageParam.packageName, ActivityManager.class.getName(), loadPackageParam.classLoader, "getRunningAppProcesses", new Object[]{});
         addHookMethod(loadPackageParam.packageName, "android.app.ApplicationPackageManager", loadPackageParam.classLoader, "getInstalledPackages", new Object[]{Integer.TYPE.getName()});
@@ -168,58 +168,58 @@ public class XposeHook implements IXposedHookLoadPackage{
 
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                if("getNetworkInfo".equals(methodName)){
-
-                    try{
-                        String deviceid = XposeUtil.configMap.optString(XposeUtil.m_deviceId);
-                        if(!TextUtils.isEmpty(deviceid)){
-                            double anInt = Double.parseDouble(deviceid);
-                            if(anInt % 2 == 0)
-                                if (Integer.parseInt(param.args[0].toString()) == ConnectivityManager.TYPE_WIFI) {
-                                    NetworkInfo networkInfo = (NetworkInfo) param.getResult();
-                                    Field mState = NetworkInfo.class.getDeclaredField("mState");
-                                    mState.setAccessible(true);
-                                    mState.set(networkInfo,NetworkInfo.State.DISCONNECTED);
-                                    param.setResult(networkInfo);
-                                }
-                        }
-
-                    }catch (Exception e){
-                        e.printStackTrace();
-                        L.log(e.getMessage());
-                    }
-                }else
-                if("getTypeName".equals(methodName) || "getType".equals(methodName)|| "getSubtype".equals(methodName)|| "getSubtypeName".equals(methodName)|| "getExtraInfo".equals(methodName)){
-
-                    try{
-                        String deviceid = XposeUtil.configMap.optString(XposeUtil.m_deviceId);
-                        if(!TextUtils.isEmpty(deviceid)){
-                            double anInt = Double.parseDouble(deviceid);
-                            if(anInt % 2 == 0){
-                                if("getTypeName".equals(methodName))
-                                    param.setResult("MOBILE");
-                                else if("getType".equals(methodName))
-                                    param.setResult(ConnectivityManager.TYPE_MOBILE);
-                                else if("getSubtype".equals(methodName)){
-                                    int m_networkType = XposeUtil.configMap.optInt(XposeUtil.m_networkType, -1);
-                                    if(m_networkType != -1)
-                                        param.setResult(m_networkType);
-                                }
-                                else if("getSubtypeName".equals(methodName)){
-                                    int m_networkType = XposeUtil.configMap.optInt(XposeUtil.m_networkType, -1);
-                                    if(m_networkType != -1)
-                                        param.setResult(AppUtils.getNetworkTypeName(m_networkType));
-                                }
-                                else if("getExtraInfo".equals(methodName))
-                                    param.setResult("cmnet");
-                            }
-                        }
-
-                    }catch (Exception e){
-                        e.printStackTrace();
-                        L.log(e.getMessage());
-                    }
-                }else
+//                if("getNetworkInfo".equals(methodName)){
+//
+//                    try{
+//                        String deviceid = XposeUtil.configMap.optString(XposeUtil.m_deviceId);
+//                        if(!TextUtils.isEmpty(deviceid)){
+//                            double anInt = Double.parseDouble(deviceid);
+//                            if(anInt % 2 == 0)
+//                                if (Integer.parseInt(param.args[0].toString()) == ConnectivityManager.TYPE_WIFI) {
+//                                    NetworkInfo networkInfo = (NetworkInfo) param.getResult();
+//                                    Field mState = NetworkInfo.class.getDeclaredField("mState");
+//                                    mState.setAccessible(true);
+//                                    mState.set(networkInfo,NetworkInfo.State.DISCONNECTED);
+//                                    param.setResult(networkInfo);
+//                                }
+//                        }
+//
+//                    }catch (Exception e){
+//                        e.printStackTrace();
+//                        L.log(e.getMessage());
+//                    }
+//                }else
+//                if("getTypeName".equals(methodName) || "getType".equals(methodName)|| "getSubtype".equals(methodName)|| "getSubtypeName".equals(methodName)|| "getExtraInfo".equals(methodName)){
+//
+//                    try{
+//                        String deviceid = XposeUtil.configMap.optString(XposeUtil.m_deviceId);
+//                        if(!TextUtils.isEmpty(deviceid)){
+//                            double anInt = Double.parseDouble(deviceid);
+//                            if(anInt % 2 == 0){
+//                                if("getTypeName".equals(methodName))
+//                                    param.setResult("MOBILE");
+//                                else if("getType".equals(methodName))
+//                                    param.setResult(ConnectivityManager.TYPE_MOBILE);
+//                                else if("getSubtype".equals(methodName)){
+//                                    int m_networkType = XposeUtil.configMap.optInt(XposeUtil.m_networkType, -1);
+//                                    if(m_networkType != -1)
+//                                        param.setResult(m_networkType);
+//                                }
+//                                else if("getSubtypeName".equals(methodName)){
+//                                    int m_networkType = XposeUtil.configMap.optInt(XposeUtil.m_networkType, -1);
+//                                    if(m_networkType != -1)
+//                                        param.setResult(AppUtils.getNetworkTypeName(m_networkType));
+//                                }
+//                                else if("getExtraInfo".equals(methodName))
+//                                    param.setResult("cmnet");
+//                            }
+//                        }
+//
+//                    }catch (Exception e){
+//                        e.printStackTrace();
+//                        L.log(e.getMessage());
+//                    }
+//                }else
 
                 if("getExternalCacheDir".equals(methodName) ){
 
