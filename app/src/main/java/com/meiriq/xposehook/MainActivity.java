@@ -27,6 +27,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.meiriq.xposehook.bean.ConfigHelper;
+import com.meiriq.xposehook.service.DataMonitorService;
 import com.meiriq.xposehook.tutorial.AppUtils;
 import com.meiriq.xposehook.tutorial.Shell;
 import com.meiriq.xposehook.utils.L;
@@ -45,7 +46,7 @@ public class MainActivity extends BaseActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-
+        startService(new Intent(this, DataMonitorService.class));
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(

@@ -20,4 +20,10 @@ public class L {
         }
     }
 
+    public static void xpose(String log){
+        if(true){
+            Log.d(TAG,log);
+        }
+    }
+
 }

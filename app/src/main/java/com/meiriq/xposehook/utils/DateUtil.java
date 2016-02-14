@@ -97,10 +97,18 @@ public class DateUtil {
     }
 
     public static String getDateTime(int diff,int hour,int minute){
+        long dateTimeMills = getDateTimeMills(diff, hour, minute, 0);
+        return format.format(new Date(dateTimeMills));
+    }
+
+    public static long getDateTimeMills(int diff,int hour,int minute,int second){
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.DAY_OF_MONTH, calendar.get(Calendar.DAY_OF_MONTH) - diff);
         calendar.set(Calendar.HOUR_OF_DAY,hour);
         calendar.set(Calendar.MINUTE,minute);
-        return format.format(calendar.getTime());
+        calendar.set(Calendar.SECOND,second);
+        return calendar.getTimeInMillis();
     }
+
+
 }

@@ -22,6 +22,7 @@
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -101,14 +102,17 @@
         <activity
             android:name=".LocalDataDetailActivity"
             android:label="@string/title_activity_local_data_detail"
-            android:theme="@style/AppTheme.NoActionBar"/>
-
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".DataKeepStatusActivity"
-            android:label="@string/title_activity_local_data_detail"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:label="@string/title_activity_datakeepstatus"
+            android:theme="@style/AppTheme.NoActionBar" />
 
-        </activity>
+        <service
+            android:name=".service.DataMonitorService"
+            android:enabled="true"
+            android:exported="true" />
+
     </application>
 
 </manifest>

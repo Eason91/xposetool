@@ -36,6 +36,24 @@ public class BaseActivity extends ToolbarActivity{
         return result;
     }
 
+    /**
+     * 获取spinner的有效值
+     * @param spinnerValue
+     * @return
+     */
+    public int getEffectiveSpinnerValue(String spinnerValue){
+        try{
+            String[] split = spinnerValue.split(":");
+            if(split.length == 2){
+                return Integer.parseInt(split[1]);
+            }
+        }catch (Exception e){
+
+        }
+
+        return 0;
+    }
+
 
     /**
      * 删除列表中在白名单中也有的数据

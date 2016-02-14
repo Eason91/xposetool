@@ -97,7 +97,7 @@ public class LocalDataDao extends BaseDao<DataInfo>{
      * @return
      */
     public Cursor queryDateTime(String[] args){
-        return query(String.format("select * from %s where savetime = ? and usetime != ? order by detailtime ASC", TABLE_LOCAL_DATA), args);
+        return query(String.format("select * from %s where savetime = ? and usetime != ? and detailtime > ? and detailtime < ? order by detailtime ASC", TABLE_LOCAL_DATA), args);
     }
 
     /**
@@ -131,6 +131,15 @@ public class LocalDataDao extends BaseDao<DataInfo>{
         return null;
     }
 
+    public DataInfo getLocalData(String saveTime, long dateTimeFrom, long dateTimeTo) {
+        Cursor cursor = queryDateTime(new String[]{saveTime, DateUtil.getCurDate(), String.valueOf(dateTimeFrom), String.valueOf(dateTimeTo)});
+        ArrayList<DataInfo> dataInfos = SetDataUtil.parseCursor2List(cursor);
+        Log.d("unlock","数据大小"+dataInfos.size());
+        if(dataInfos.size()>0)
+            return dataInfos.get(0);
+        return null;
+    }
+
     /**
      * 获取指定某天的数据与其总数据比重是否大于指定weight
      * @param saveTime
@@ -145,13 +154,13 @@ public class LocalDataDao extends BaseDao<DataInfo>{
             return true;
         }
         float v = (float) useCount * 100 / allCount;
-        L.log("useCount"+useCount+"allCount"+allCount+"v"+v+"saveTime"+saveTime);
         if(v >= weight){
             return true;
         }
 
         return false;
     }
+
 
 
 }

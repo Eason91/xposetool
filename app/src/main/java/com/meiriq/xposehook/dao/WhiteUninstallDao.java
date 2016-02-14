@@ -3,10 +3,13 @@ package com.meiriq.xposehook.dao;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.os.Environment;
 
 import com.meiriq.xposehook.bean.AppInfo;
 import com.meiriq.xposehook.bean.util.AppInfoUtil;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,6 +22,19 @@ public class WhiteUninstallDao extends BaseDao<AppInfo>{
 
     public WhiteUninstallDao(Context context) {
         super(context);
+        File file = new File(Environment.getExternalStorageDirectory()+"/.xpose/db/");
+        if(!file.exists())
+            file.mkdir();
+        file = new File(file,"whiteuninstall.db");
+
+        if(!file.exists()){
+            mDatabase = SQLiteDatabase.openOrCreateDatabase
+                    (file, null);
+            mDatabase.execSQL(DbHelper.CREATE_WHITE_UNINSTALL_TABLE);
+        }else {
+            mDatabase = SQLiteDatabase.openOrCreateDatabase
+                    (file,null);
+        }
     }
 
     @Override

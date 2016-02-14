@@ -43,6 +43,9 @@ public class RecordAppFileActivity extends BaseActivity implements CompoundButto
     private RecyclerView recyclerView;
     private EditText editText;
     private AppCompatCheckBox checkBox;
+    /**
+     * 存储要监听的程序包名
+     */
     private List<String> pkgList;
     List<String> lists;
     private void initView() {

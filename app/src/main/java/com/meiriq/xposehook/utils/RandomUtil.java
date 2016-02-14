@@ -13,6 +13,23 @@ import java.util.Random;
  */
 public class RandomUtil {
 
+    private static final String[] AP1 = {"cmnet","ctnet","uninet","3gnet","3gwap","cmwap"};
+    private static final String[] AP2 = {"360WIFI-","miwifi-","",};
+    public static String getWIFIName (){
+        if((Math.random()*2)<1){
+            String prefix = AP2[(int) (Math.random() * 3)];
+            StringBuilder sb = new StringBuilder(prefix);
+            int length = (int) (Math.random()*6+3);
+            for (int i = 0; i < length; i++) {
+                sb.append(LETTERSANDNUMBER[(int)(Math.random()*LETTERSANDNUMBER.length)]);
+            }
+            return sb.toString();
+        }else {
+            return AP1[(int)(Math.random()*AP1.length)];
+        }
+
+    }
+
     public static final String[] LETTERS = {"a","b","c","d","e","f","g","h","i","j",
             "k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"};
 

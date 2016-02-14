@@ -5,23 +5,32 @@ import android.bluetooth.BluetoothAdapter;
 import android.content.ContentResolver;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
+import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
+import android.util.DisplayMetrics;
+import android.util.Log;
+import android.view.Display;
 
 import com.meiriq.xposehook.utils.L;
 import com.meiriq.xposehook.utils.RecordFileUtil;
 import com.meiriq.xposehook.utils.TestUtil;
 import com.meiriq.xposehook.utils.XposeUtil;
 
+import org.w3c.dom.Text;
+
 import java.io.File;
 import java.io.FileReader;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.List;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
@@ -42,7 +51,7 @@ public class XposeHook implements IXposedHookLoadPackage{
             L.debug("系统应用"+loadPackageParam.packageName+android.os.Process.myUid());
             return ;
         }else{
-            L.debug("普通应用"+loadPackageParam.packageName+android.os.Process.myUid());
+            L.debug("普通应用" + loadPackageParam.packageName + android.os.Process.myUid());
         }
 
         if(loadPackageParam.packageName.equals("com.meiriq.xposehook")){
@@ -74,21 +83,22 @@ public class XposeHook implements IXposedHookLoadPackage{
         addHookMethod(loadPackageParam.packageName, WifiInfo.class.getName(), loadPackageParam.classLoader, "getMacAddress", new Object[]{});
         addHookMethod(loadPackageParam.packageName, WifiInfo.class.getName(), loadPackageParam.classLoader, "getSSID", new Object[]{});
         addHookMethod(loadPackageParam.packageName, WifiInfo.class.getName(), loadPackageParam.classLoader, "getBSSID", new Object[]{});
+//        addHookMethod(loadPackageParam.packageName, WifiManager.class.getName(), loadPackageParam.classLoader, "getConfiguredNetworks", new Object[]{});
+        addHookMethod(loadPackageParam.packageName, Method.class.getName(), loadPackageParam.classLoader, "invoke", new Object[]{Object.class.getName(),Object[].class.getName()});
 
         addHookMethod(loadPackageParam.packageName, Build.class.getName(), loadPackageParam.classLoader, "getRadioVersion", new Object[]{});
         addHookMethod(loadPackageParam.packageName, BluetoothAdapter.class.getName(), loadPackageParam.classLoader, "getAddress", new Object[]{});
 
-//        addHookMethod(loadPackageParam.packageName, Display.class.getName(), loadPackageParam.classLoader, "getMetrics", new Object[]{DisplayMetrics.class.getName()});
-//        addHookMethod(loadPackageParam.packageName, Display.class.getName(), loadPackageParam.classLoader, "getWidth", new Object[]{});
-//        addHookMethod(loadPackageParam.packageName, Display.class.getName(), loadPackageParam.classLoader, "getHeight", new Object[]{});
-//        addHookMethod(loadPackageParam.packageName, Resources.class.getName(), loadPackageParam.classLoader, "getDisplayMetrics", new Object[]{});
+        addHookMethod(loadPackageParam.packageName, Display.class.getName(), loadPackageParam.classLoader, "getMetrics", new Object[]{DisplayMetrics.class.getName()});
+        addHookMethod(loadPackageParam.packageName, Display.class.getName(), loadPackageParam.classLoader, "getWidth", new Object[]{});
+        addHookMethod(loadPackageParam.packageName, Display.class.getName(), loadPackageParam.classLoader, "getHeight", new Object[]{});
+        addHookMethod(loadPackageParam.packageName, Resources.class.getName(), loadPackageParam.classLoader, "getDisplayMetrics", new Object[]{});
 
 //        addHookMethod(loadPackageParam.packageName, NetworkInfo.class.getName(), loadPackageParam.classLoader, "getTypeName", new Object[]{});
 //        addHookMethod(loadPackageParam.packageName, NetworkInfo.class.getName(), loadPackageParam.classLoader, "getType", new Object[]{});
 //        addHookMethod(loadPackageParam.packageName, NetworkInfo.class.getName(), loadPackageParam.classLoader, "getSubtype", new Object[]{});
 //        addHookMethod(loadPackageParam.packageName, NetworkInfo.class.getName(), loadPackageParam.classLoader, "getSubtypeName", new Object[]{});
-//        addHookMethod(loadPackageParam.packageName, NetworkInfo.class.getName(), loadPackageParam.classLoader, "getExtraInfo", new Object[]{});
-//        addHookMethod(loadPackageParam.packageName, ConnectivityManager.class.getName(), loadPackageParam.classLoader, "getNetworkInfo", new Object[]{Integer.TYPE.getName()});
+        addHookMethod(loadPackageParam.packageName, NetworkInfo.class.getName(), loadPackageParam.classLoader, "getExtraInfo", new Object[]{});
 
         addHookMethod(loadPackageParam.packageName, ActivityManager.class.getName(), loadPackageParam.classLoader, "getRunningAppProcesses", new Object[]{});
         addHookMethod(loadPackageParam.packageName, "android.app.ApplicationPackageManager", loadPackageParam.classLoader, "getInstalledPackages", new Object[]{Integer.TYPE.getName()});
@@ -110,6 +120,8 @@ public class XposeHook implements IXposedHookLoadPackage{
     }
 
     private void setSystemData() {
+
+
 
         if(!TextUtils.isEmpty(XposeUtil.configMap.optString(XposeUtil.m_RELEASE))){
             XposedHelpers.setStaticObjectField(Build.VERSION.class,"RELEASE",XposeUtil.configMap.optString(XposeUtil.m_RELEASE));
@@ -220,7 +232,34 @@ public class XposeHook implements IXposedHookLoadPackage{
 //                        L.log(e.getMessage());
 //                    }
 //                }else
+                if("getExtraInfo".equals(methodName)){
 
+                    String m_ExtraInfo = XposeUtil.configMap.optString(XposeUtil.m_ExtraInfo);
+                    if(!TextUtils.isEmpty(m_ExtraInfo)){
+                        param.setResult(m_ExtraInfo);
+                    }
+
+
+                }else
+//                if("getConfiguredNetworks".equals(methodName) ){
+//                    L.xpose("getConfiguredNetworks");
+//                    List<WifiConfiguration> configuredNetworks = (List<WifiConfiguration>) param.getResult();
+////                    Log.d("unlock","configuredNetworks==="+configuredNetworks.size());
+//                    if(configuredNetworks!=null){
+//                        for (int i = 0; i < configuredNetworks.size(); i++) {
+//                            WifiConfiguration wifiConfiguration = configuredNetworks.get(i);
+////                            Log.d("unlock","configuredNetworks==="+wifiConfiguration.status+"="+wifiConfiguration.);
+//                            if(wifiConfiguration.status == WifiConfiguration.Status.CURRENT){
+//                                String s = XposeUtil.configMap.optString(XposeUtil.m_SSID);
+//                                if(!TextUtils.isEmpty(s)){
+//                                    wifiConfiguration.SSID = s;
+//                                }
+//                            }
+//                        }
+//                        param.setResult(configuredNetworks);
+//                    }
+//
+//                }else
                 if("getExternalCacheDir".equals(methodName) ){
 
                     File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+File.separator+"xpdownload");
@@ -228,8 +267,14 @@ public class XposeHook implements IXposedHookLoadPackage{
 
                 }else
 
-//                        L.log("android.os.SystemProperties获取序列号");
+                //L.log("android.os.SystemProperties获取序列号");
                 if("get".equals(methodName) && className.equals("android.os.SystemProperties")){
+                    int length = param.args.length;
+                    if(length == 1)
+                        Log.d("xpose","="+param.args[0]);
+                    else if(length == 2)
+                        Log.d("xpose","="+param.args[0]+"="+param.args[1]);
+
                     if(param.args[0].equals("ro.serialno")){
                         String serial = XposeUtil.configMap.optString(XposeUtil.m_serial);
                         if(!TextUtils.isEmpty(serial)){
@@ -265,46 +310,61 @@ public class XposeHook implements IXposedHookLoadPackage{
                     for (int i = installedPackages.size() - 1; i >= 0; i--) {
                         String s = installedPackages.get(i).packageName;
                         if(s.equals(XposeUtil.pkg1) || s.equals(XposeUtil.pkg2) || s.equals(XposeUtil.pkg3)){
-                            L.debug("getInstalledPackages+移除"+s);
                             installedPackages.remove(i);
                         }
                     }
                     param.setResult(installedPackages);
                 }else
 
-//                //屏幕大小
-//                if("getWidth".equals(methodName) && className.equals(Display.class.getName())){
-//                    String[] split = XposeUtil.configMap.optString(XposeUtil.m_screenSize).split("x");
-//                    if(split.length == 2){
-//                        param.setResult(Integer.parseInt(split[0]));
-//                    }
-//                }else
-//                //屏幕大小
-//                if("getHeight".equals(methodName) && className.equals(Display.class.getName())){
-//                    String[] split = XposeUtil.configMap.optString(XposeUtil.m_screenSize).split("x");
-//                    if(split.length == 2){
-//                        param.setResult(Integer.parseInt(split[1]));
-//                    }
-//                }else
                 //屏幕大小
-//                if("getDisplayMetrics".equals(methodName)){
-//                    String[] split = XposeUtil.configMap.optString(XposeUtil.m_screenSize).split("x");
-//                    if(split.length == 2){
-//                        DisplayMetrics displayMetrics = (DisplayMetrics) param.getResult();
-//                        displayMetrics.heightPixels = Integer.parseInt(split[0]);
-//                        displayMetrics.widthPixels = Integer.parseInt(split[1]);
-//                        param.setResult(displayMetrics);
-//                    }
-//                }else
-//                //屏幕大小
-//                if("getMetrics".equals(methodName)){
-//                    String[] split = XposeUtil.configMap.optString(XposeUtil.m_screenSize).split("x");
-//                    if(split.length == 2){
-//                        Object arg = param.args[0];
-//                        ((DisplayMetrics)arg).heightPixels = Integer.parseInt(split[0]);
-//                        ((DisplayMetrics)arg).widthPixels = Integer.parseInt(split[1]);
-//                    }
-//                }else
+                if("getWidth".equals(methodName) && className.equals(Display.class.getName()) && !packageName.contains("miui") && !packageName.contains("android")){
+                    String value = XposeUtil.configMap.optString(XposeUtil.m_screenSize);
+                    if(!TextUtils.isEmpty(value)){
+                        String[] split = value.split("x");
+                        if(split.length == 2){
+                            param.setResult(Integer.parseInt(split[0]));
+                        }
+
+                    }
+                }else
+                //屏幕大小
+                if("getHeight".equals(methodName) && className.equals(Display.class.getName()) && !packageName.contains("miui") && !packageName.contains("android")){
+                    String value = XposeUtil.configMap.optString(XposeUtil.m_screenSize);
+                    if(!TextUtils.isEmpty(value)){
+                        String[] split = value.split("x");
+                        if(split.length == 2){
+                            param.setResult(Integer.parseInt(split[1]));
+                        }
+
+                    }
+                }else
+                //屏幕大小
+                if("getDisplayMetrics".equals(methodName) && !packageName.contains("miui") && !packageName.contains("android")){
+                    String value = XposeUtil.configMap.optString(XposeUtil.m_screenSize);
+                    if(!TextUtils.isEmpty(value)){
+                        String[] split = value.split("x");
+                        if(split.length == 2){
+                            DisplayMetrics displayMetrics = (DisplayMetrics) param.getResult();
+                            displayMetrics.heightPixels = Integer.parseInt(split[0]);
+                            displayMetrics.widthPixels = Integer.parseInt(split[1]);
+                            param.setResult(displayMetrics);
+                        }
+                    }
+
+                }else
+                //屏幕大小
+                if("getMetrics".equals(methodName)&& !packageName.contains("miui") && !packageName.contains("android")){
+                    String value = XposeUtil.configMap.optString(XposeUtil.m_screenSize);
+                    if(!TextUtils.isEmpty(value)){
+                        String[] split = value.split("x");
+                        if(split.length == 2){
+                            Object arg = param.args[0];
+                            ((DisplayMetrics)arg).heightPixels = Integer.parseInt(split[0]);
+                            ((DisplayMetrics)arg).widthPixels = Integer.parseInt(split[1]);
+                        }
+
+                    }
+                }else
                 //蓝牙地址
                 if("getAddress".equals(methodName)){
                     String m_bluetoothaddress = XposeUtil.configMap.optString(XposeUtil.m_bluetoothaddress);
@@ -489,6 +549,8 @@ public class XposeHook implements IXposedHookLoadPackage{
                     if (attr.contains(RecordFileUtil.ExternalStorage) && !attr.contains("xpose")
                             && !(attr.startsWith(RecordFileUtil.ExternalStorage+RecordFileUtil.FILE_PATH_RECORD))
                                     && RecordFileUtil.addFileRecord(packageName, attr)) ;
+
+
                 }
             }
         };

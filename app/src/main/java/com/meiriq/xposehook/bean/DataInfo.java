@@ -44,9 +44,18 @@ public class DataInfo implements Serializable{
     private String bluetoothAddress;
     private String internalIp;
 
+    private String extraInfo;
     private String saveTime;//保存时间，精确到天
     private String useTime;//使用时间，精确到天，当天时候时，更新到那一天，用来判断那一天的有没有使用这个数据
     private long detailTime;//详细时间，精确到秒
+
+    public String getExtraInfo() {
+        return extraInfo;
+    }
+
+    public void setExtraInfo(String extraInfo) {
+        this.extraInfo = extraInfo;
+    }
 
     public String getId() {
         return id;

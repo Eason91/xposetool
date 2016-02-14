@@ -1,8 +1,11 @@
 package com.meiriq.xposehook.bean;
 
 import android.content.Context;
+import android.os.Environment;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -32,12 +35,32 @@ public class DataKeepStatus implements Serializable{
         this.useDay = useDay;
     }
 
+    private static File getFilePath(String filePath){
+        File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath(),ConfigHelper.FILE_PATH);
+        if(!file.exists())
+            file.mkdirs();
+        file = new File(file,File.separator+filePath);
+        if(!file.exists()){
+            try {
+                file.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return file;
+    }
+
+    /**
+     * 获取留存时间和留存量的集合ENDTIME
+     * @param context
+     * @return
+     */
     public static List<DataKeepStatus> loadDataKeepStatus(Context context){
         List<DataKeepStatus> dataKeepStatus = null;
-        File file = new File(context.getFilesDir(),DATASTATUS);
+        File file = getFilePath(DATASTATUS);
         if(file.exists()){
             try {
-                ObjectInputStream inputStream = new ObjectInputStream(context.openFileInput(DATASTATUS));
+                ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(getFilePath(DATASTATUS)));
                 dataKeepStatus = (List<DataKeepStatus>) inputStream.readObject();
                 inputStream.close();
             } catch (Exception e) {
@@ -50,12 +73,12 @@ public class DataKeepStatus implements Serializable{
     }
 
     public static void saveDataKeepStatus(Context context,List<DataKeepStatus> loadDataKeepStatus){
-        File file = new File(context.getFilesDir(),DATASTATUS);
+        File file = getFilePath(DATASTATUS);
         if(file.exists()){
             file.delete();
         }
         try {
-            ObjectOutputStream outputStream = new ObjectOutputStream(context.openFileOutput(DATASTATUS,Context.MODE_PRIVATE));
+            ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(getFilePath(DATASTATUS)));
             outputStream.writeObject(loadDataKeepStatus);
             outputStream.close();
         } catch (IOException e) {

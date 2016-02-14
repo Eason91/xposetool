@@ -21,6 +21,12 @@
     <com.meiriq.xposehook.view.Linera
         android:id="@+id/data_status"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"></com.meiriq.xposehook.view.Linera>
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="1.主页留存设置为0:0时,只判断时间;主页留存不是0:0时,优先判断留存量,留存量不符合的情况下再判断时间"/>
 
 </LinearLayout>

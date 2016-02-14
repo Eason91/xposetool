@@ -150,7 +150,7 @@ public class Linera extends LinearLayout implements View.OnClickListener ,TimePi
             public void onClick(View v) {
                 mDataKeepStatuses.remove(dataKeepStatus);
                 ObjectAnimator animator = ObjectAnimator.ofFloat(view, "translationY", mHeight);
-                animator.setDuration(600);
+                animator.setDuration(400);
                 animator.addListener(new AnimatorListenerAdapter() {
                     @Override
                     public void onAnimationEnd(Animator animation) {

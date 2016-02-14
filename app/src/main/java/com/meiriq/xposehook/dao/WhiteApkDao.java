@@ -3,12 +3,15 @@ package com.meiriq.xposehook.dao;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.os.Environment;
 
 import com.meiriq.xposehook.bean.ApkInfo;
 import com.meiriq.xposehook.bean.AppInfo;
 import com.meiriq.xposehook.bean.util.ApkInfoUtil;
 import com.meiriq.xposehook.bean.util.AppInfoUtil;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +24,19 @@ public class WhiteApkDao extends BaseDao<ApkInfo>{
 
     public WhiteApkDao(Context context) {
         super(context);
+        File file = new File(Environment.getExternalStorageDirectory()+"/.xpose/db/");
+        if(!file.exists())
+            file.mkdir();
+        file = new File(file,"whiteapk.db");
+
+        if(!file.exists()){
+            mDatabase = SQLiteDatabase.openOrCreateDatabase
+                    (file, null);
+            mDatabase.execSQL(DbHelper.CREATE_WHITE_APK_TABLE);
+        }else {
+            mDatabase = SQLiteDatabase.openOrCreateDatabase
+                    (file,null);
+        }
     }
 
     @Override

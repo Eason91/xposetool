@@ -23,8 +23,8 @@ android {
         applicationId "com.meiriq.xposehook"
         minSdkVersion 15
         targetSdkVersion 22
-        versionCode 15
-        versionName "2.6.1"
+        versionCode 265
+        versionName "2.6.5"
     }
     buildTypes {
         debug {

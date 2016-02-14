@@ -56,7 +56,6 @@ public class FindApkActivity extends BaseActivity {
         initActionBar();
 
 
-
         initView();
         initData();
     }
@@ -113,6 +112,7 @@ public class FindApkActivity extends BaseActivity {
         @Override
         protected List<ApkInfo> doInBackground(Integer... params) {
             String path = Environment.getExternalStorageDirectory().getAbsolutePath();
+
             reSearch(new File(path));
             for (int i = 0; i < fileList.size(); i++) {
                 ApkInfo apkInfo = new ApkInfo();
@@ -167,6 +167,7 @@ public class FindApkActivity extends BaseActivity {
             intent.putExtras(bundle);
             startActivityForResult(intent, REQ_APKWHITE);
         }
+
 
         return super.onOptionsItemSelected(item);
     }

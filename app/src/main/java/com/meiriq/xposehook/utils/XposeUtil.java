@@ -45,6 +45,7 @@ public class XposeUtil {
     public static String m_hardware = "hardware";//硬件
     public static String m_fingerprint = "fingerprint";//指纹
     public static String m_serial = "serial";//序列号
+    public static String m_ExtraInfo = "extrainfo";//接入点名称，包括ｗｉｆｉ和net
 
     public static String pkg1 = "de.robv.android.xpose.installer";
     public static String pkg2 = "pro.burgerz.wsm.manager";
@@ -63,7 +64,8 @@ public class XposeUtil {
         new Thread(){
             @Override
             public void run() {
-                saveFileData("xposeDevice.txt",configMap.toString());
+
+                saveFileData("xposeDevice.txt", configMap.toString());
             }
         }.start();
     }

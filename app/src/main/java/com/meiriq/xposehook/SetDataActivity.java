@@ -8,18 +8,15 @@ import android.support.design.widget.TextInputLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.AppCompatButton;
-import android.support.v7.widget.AppCompatCheckBox;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.meiriq.xposehook.adapter.DataSpinner1Adapter;
@@ -28,6 +25,7 @@ import com.meiriq.xposehook.bean.Channel;
 import com.meiriq.xposehook.bean.ConfigHelper;
 import com.meiriq.xposehook.bean.DataInfo;
 import com.meiriq.xposehook.bean.DataKeepStatus;
+import com.meiriq.xposehook.bean.SetDay;
 import com.meiriq.xposehook.dao.LocalDataDao;
 import com.meiriq.xposehook.net.Callback;
 import com.meiriq.xposehook.net.ErrorObject;
@@ -35,22 +33,17 @@ import com.meiriq.xposehook.net.control.ChannelService;
 import com.meiriq.xposehook.net.control.DataService;
 import com.meiriq.xposehook.utils.DateUtil;
 import com.meiriq.xposehook.utils.DialogUtil;
-import com.meiriq.xposehook.utils.L;
 import com.meiriq.xposehook.utils.RandomUtil;
-import com.meiriq.xposehook.utils.SP;
 import com.meiriq.xposehook.utils.XposeUtil;
-import com.wdullaer.materialdatetimepicker.date.DatePickerDialog;
-import com.wdullaer.materialdatetimepicker.time.RadialPickerLayout;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
-public class SetDataActivity extends TimePickActivity implements SwipeRefreshLayout.OnRefreshListener, View.OnClickListener {
-    private static final String[] DAY = {"0:0","留存(今天):1","留存(昨天):2","留存:3","留存:4","留存:5","留存:6","留存:7","留存:8","留存:9","留存:10"};
+public class SetDataActivity extends TimePickActivity implements SwipeRefreshLayout.OnRefreshListener, View.OnClickListener, AdapterView.OnItemSelectedListener {
+    public static final String[] DAY = {"0:0","留存(今天):1","留存(昨天):2","留存:3","留存:4","留存:5","留存:6","留存:7","留存:8","留存:9","留存:10"};
     private static final String[] HOURS = {"00","01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23"};
     private static final String[] MINUTE_AND_SECOND = {"00","10","20","30","40","50"};
 
@@ -58,143 +51,16 @@ public class SetDataActivity extends TimePickActivity implements SwipeRefreshLay
 
     private static List<DataKeepStatus> mDataKeepStatuses;//留存时间管理数据
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_set_data);
-        initActionBar();
-
-        setActionBar();
-
-        initView();
-
-        XposeUtil.initConfigMap();
-
-        getChannelName();
-
-        initData();
-
-
-    }
-
-    private void initData() {
-        mDataKeepStatuses = DataKeepStatus.loadDataKeepStatus(this);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if(mDataKeepStatuses == null ){
-            return;
-        }
-        DataKeepAsync keepAsync = new DataKeepAsync();
-        keepAsync.execute(0);
-    }
-
-    /**
-     * 每次resume都验证一下当前留存时间是否需要改变
-     */
-    class DataKeepAsync extends AsyncTask<Integer,Integer,Integer>{
-
-        @Override
-        protected Integer doInBackground(Integer... params) {
-            String curDate = DateUtil.getCurDate();
-            String keepDay = DAY[mPositionDay].split(":")[1];
-            int queryInWhichDayCount = localDataDao.queryInWhichDayCount(new String[]{DateUtil.getCurDate(Integer.parseInt(keepDay)), curDate});
-            long timeInMillis = Calendar.getInstance().getTimeInMillis();
-            for (int i = 0; i < mDataKeepStatuses.size(); i++) {
-                DataKeepStatus dataKeepStatus = mDataKeepStatuses.get(i);
-                L.log(dataKeepStatus.toString());
-                if( queryInWhichDayCount == dataKeepStatus.getKeepCount() && !curDate.equals(dataKeepStatus.getUseDay())){
-                    mPositionDay = dataKeepStatus.getKeepDayStatus();
-                    dataKeepStatus.setUseDay(curDate);
-                    DataKeepStatus.saveDataKeepStatus(SetDataActivity.this, mDataKeepStatuses);
-                    return mPositionDay;
-                }
-            }
-            for (int j = 0; j < mDataKeepStatuses.size(); j++) {
-                DataKeepStatus dataKeepStatus = mDataKeepStatuses.get(j);
-                String[] split = dataKeepStatus.getKeepTime().split(":");
-                Calendar instance = Calendar.getInstance();
-                instance.set(Calendar.HOUR_OF_DAY,Integer.parseInt(split[0]));
-                instance.set(Calendar.MINUTE, Integer.parseInt(split[1]));
-                if(Math.abs(instance.getTimeInMillis() - timeInMillis) < 1000 * 60 *15 && !curDate.equals(dataKeepStatus.getUseDay())){
-                    mPositionDay = dataKeepStatus.getKeepDayStatus();
-                    dataKeepStatus.setUseDay(curDate);
-                    DataKeepStatus.saveDataKeepStatus(SetDataActivity.this, mDataKeepStatuses);
-                    return mPositionDay;
-                }
-            }
-            return -1;
-        }
-
-        @Override
-        protected void onPostExecute(Integer result) {
-            super.onPostExecute(result);
-            if(result != -1){
-                spinnerDay.setSelection(mPositionDay);
-            }
-        }
-    }
-
-    ChannelService channelService;
-    private void getChannelName() {
-        mPositionChannel = SP.getInt(SetDataActivity.this, SP.KEY_CHANNEL);
-        channelList = ConfigHelper.loadChannel(this);
-        channelService = new ChannelService(this);
-        channelService.setCallback(new Callback() {
-            @Override
-            public void onStart() {
-                showLoadingProgressDialog();
-            }
-
-            @Override
-            public void onSuccess(Object object) {
-                dismissProgressDialog();
-                mSwipeRefreshLayout.setRefreshing(false);
-                channelList = (List<Channel>) object;
-                Log.d("unlock","刷新数据"+channelList.toString());
-                ConfigHelper.saveChannel(SetDataActivity.this,channelList);
-                setChannelName();
-            }
-
-            @Override
-            public void onError(ErrorObject error) {
-                mSwipeRefreshLayout.setRefreshing(false);
-                dismissProgressDialog();
-                channelList = Channel.getDefaultChannels();
-                Log.d("unlock","刷新数据"+error.toString());
-
-                setChannelName();
-                Toast.makeText(SetDataActivity.this, "获取渠道名失败", Toast.LENGTH_SHORT).show();
-            }
-        });
-        if(channelList == null){
-            channelService.getChannelName();
-        }else{
-            setChannelName();
-        }
-    }
-
-    private void setChannelName() {
-        adapter.setData(channelList);
-        adapter.notifyDataSetChanged();
-
-        spinner.setSelection(mPositionChannel);
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (position != mPositionChannel) {
-                    mPositionChannel = position;
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
-    }
+    EditText mDay2;
+    EditText mDay3;
+    EditText mDay4;
+    EditText mDay5;
+    EditText mDay6;
+    EditText mDay7;
+    EditText mDay8;
+    EditText mDay9;
+    EditText mDay10;
+    Spinner spinnerDay;
 
     List<Channel> channelList;
     int mPositionChannel = 0;
@@ -205,19 +71,7 @@ public class SetDataActivity extends TimePickActivity implements SwipeRefreshLay
     int mPositionMinuteTo = 0;
     DataSpinnerAdapter adapter;
     Spinner spinner;
-    private void setActionBar() {
-
-        ActionBar actionBar = getSupportActionBar();
-        actionBar.setDisplayShowCustomEnabled(true);
-        actionBar.setDisplayShowTitleEnabled(false);
-        actionBar.setCustomView(R.layout.actionbar_custom_spinner);
-        spinner = (Spinner) actionBar.getCustomView().findViewById(R.id.spinner);
-        adapter = new DataSpinnerAdapter(this);
-        spinner.setAdapter(adapter);
-
-
-    }
-
+    private EditText mExtrainfo;
     private EditText mDeviceId;
     private EditText mAndroidId;
     private EditText mPhoneNum;
@@ -250,9 +104,164 @@ public class SetDataActivity extends TimePickActivity implements SwipeRefreshLay
     DataService dataService;
     SwipeRefreshLayout mSwipeRefreshLayout;
     LocalDataDao localDataDao;
-//    AppCompatCheckBox mEndTimeBox;
-//    TextView mEndTimeText;
+    ChannelService channelService;
+    private DataInfo dataInfo;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_set_data);
+        initActionBar();
+
+        setActionBar();
+
+        initView();
+
+        XposeUtil.initConfigMap();
+
+        getChannelName();
+
+        initData();
+
+
+    }
+
+    private void initData() {
+        mDataKeepStatuses = DataKeepStatus.loadDataKeepStatus(this);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mPositionDay = mLoadSetDay.getDay();
+        spinnerDay.setSelection(mPositionDay, true);
+//        if(mDataKeepStatuses == null ){
+//            return;
+//        }
+//        DataKeepAsync keepAsync = new DataKeepAsync();
+//        keepAsync.execute(0);
+    }
+
+
+
+    /**
+     * 每次resume都验证一下当前留存时间是否需要改变
+     */
+    class DataKeepAsync extends AsyncTask<Integer,Integer,Integer>{
+
+        @Override
+        protected Integer doInBackground(Integer... params) {
+            long timeInMillis = Calendar.getInstance().getTimeInMillis();
+            String curDate = DateUtil.getCurDate();
+            if(mPositionDay != 0){
+                int keepDay = getEffectiveSpinnerValue(DAY[mPositionDay]);
+
+                int queryInWhichDayCount = localDataDao.queryInWhichDayCount(new String[]{DateUtil.getCurDate(keepDay - 1), curDate});
+                for (int i = 0; i < mDataKeepStatuses.size(); i++) {
+                    DataKeepStatus dataKeepStatus = mDataKeepStatuses.get(i);
+                    if(dataKeepStatus.getKeepCount() > 0){
+                        if( queryInWhichDayCount == dataKeepStatus.getKeepCount() && !curDate.equals(dataKeepStatus.getUseDay())){
+                            mPositionDay = dataKeepStatus.getKeepDayStatus();
+                            dataKeepStatus.setUseDay(curDate);
+                            DataKeepStatus.saveDataKeepStatus(SetDataActivity.this, mDataKeepStatuses);
+                            return mPositionDay;
+                        }
+                    }
+                }
+            }
+
+            for (int j = 0; j < mDataKeepStatuses.size(); j++) {
+                DataKeepStatus dataKeepStatus = mDataKeepStatuses.get(j);
+                String[] split = dataKeepStatus.getKeepTime().split(":");
+                Calendar instance = Calendar.getInstance();
+                instance.set(Calendar.HOUR_OF_DAY,Integer.parseInt(split[0]));
+                instance.set(Calendar.MINUTE, Integer.parseInt(split[1]));
+                if(Math.abs(instance.getTimeInMillis() - timeInMillis) < 1000 * 60 * 8 && !curDate.equals(dataKeepStatus.getUseDay())){
+                    mPositionDay = dataKeepStatus.getKeepDayStatus();
+                    Log.d("unlock","时间符合"+mPositionDay);
+                    dataKeepStatus.setUseDay(curDate);
+                    DataKeepStatus.saveDataKeepStatus(SetDataActivity.this, mDataKeepStatuses);
+                    return mPositionDay;
+                }
+            }
+            return -1;
+        }
+
+        @Override
+        protected void onPostExecute(Integer result) {
+            super.onPostExecute(result);
+            if(result != -1){
+                spinnerDay.setSelection(result);
+            }
+        }
+    }
+
+
+    private void getChannelName() {
+        mPositionChannel = mLoadSetDay.getChannel();
+        channelList = ConfigHelper.loadChannel(this);
+        channelService = new ChannelService(this);
+        channelService.setCallback(new Callback() {
+            @Override
+            public void onStart() {
+                showLoadingProgressDialog();
+            }
+
+            @Override
+            public void onSuccess(Object object) {
+                dismissProgressDialog();
+                mSwipeRefreshLayout.setRefreshing(false);
+                channelList = (List<Channel>) object;
+                Log.d("unlock", "刷新数据" + channelList.toString());
+                ConfigHelper.saveChannel(SetDataActivity.this, channelList);
+                setChannelName();
+            }
+
+            @Override
+            public void onError(ErrorObject error) {
+                mSwipeRefreshLayout.setRefreshing(false);
+                dismissProgressDialog();
+                channelList = Channel.getDefaultChannels();
+                Log.d("unlock", "刷新数据" + error.toString());
+
+                setChannelName();
+                Toast.makeText(SetDataActivity.this, "获取渠道名失败", Toast.LENGTH_SHORT).show();
+            }
+        });
+        if(channelList == null){
+            channelService.getChannelName();
+        }else{
+            setChannelName();
+        }
+    }
+
+    private void setChannelName() {
+        adapter.setData(channelList);
+        adapter.notifyDataSetChanged();
+
+        spinner.setSelection(mPositionChannel);
+        spinner.setOnItemSelectedListener(this);
+    }
+
+
+    private void setActionBar() {
+
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayShowCustomEnabled(true);
+        actionBar.setDisplayShowTitleEnabled(false);
+        actionBar.setCustomView(R.layout.actionbar_custom_spinner);
+        spinner = (Spinner) actionBar.getCustomView().findViewById(R.id.spinner);
+        adapter = new DataSpinnerAdapter(this);
+        spinner.setAdapter(adapter);
+
+
+    }
+
+
+    private SetDay mLoadSetDay;
     private void initView() {
+
+        mLoadSetDay = SetDay.loadSetDay(this);
 
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipeRefreshLayout);
         mSwipeRefreshLayout.setOnRefreshListener(this);
@@ -269,12 +278,9 @@ public class SetDataActivity extends TimePickActivity implements SwipeRefreshLay
 
         initDayView();
 
-//        mEndTimeBox = (AppCompatCheckBox) findViewById(R.id.end_time_check);
-//        mEndTimeBox.setChecked(SP.getBoolean(this, SP.KEY_SET_END_AUTO));
-//        mEndTimeText = (TextView) findViewById(R.id.end_time_text);
-//        mEndTimeText.setText(SP.getString(this, SP.KEY_END_AUTO_TODAY));
-//        mEndTimeText.setOnClickListener(this);
-
+        TextInputLayout tilExtrainfo = (TextInputLayout) findViewById(R.id.til_extrainfo);
+        tilExtrainfo.setHint("接入点名称");
+        mExtrainfo = tilExtrainfo.getEditText();
 
         TextInputLayout tilDeviceId = (TextInputLayout) findViewById(R.id.til_device_id);
         tilDeviceId.setHint("IMEI");
@@ -426,155 +432,90 @@ public class SetDataActivity extends TimePickActivity implements SwipeRefreshLay
 
     }
 
-    EditText mDay1;
-    EditText mDay2;
-    EditText mDay3;
-    EditText mDay4;
-    EditText mDay5;
-    EditText mDay6;
-    EditText mDay7;
-    EditText mDay8;
-    EditText mDay9;
-    EditText mDay10;
+
     private void initDayView() {
         TextInputLayout day2 = (TextInputLayout) findViewById(R.id.day2);
-        day2.setHint("昨天");
+        day2.setHint("昨天2");
         mDay2 = day2.getEditText();
         TextInputLayout day3 = (TextInputLayout) findViewById(R.id.day3);
-        day3.setHint("3天前");
+        day3.setHint("留存3");
         mDay3 = day3.getEditText();
         TextInputLayout day4 = (TextInputLayout) findViewById(R.id.day4);
-        day4.setHint("4天前");
+        day4.setHint("留存4");
         mDay4 = day4.getEditText();
         TextInputLayout day5 = (TextInputLayout) findViewById(R.id.day5);
-        day5.setHint("5天前");
+        day5.setHint("留存5");
         mDay5 = day5.getEditText();
         TextInputLayout day6 = (TextInputLayout) findViewById(R.id.day6);
-        day6.setHint("6天前");
+        day6.setHint("留存6");
         mDay6 = day6.getEditText();
         TextInputLayout day7 = (TextInputLayout) findViewById(R.id.day7);
-        day7.setHint("7天前");
+        day7.setHint("留存7");
         mDay7 = day7.getEditText();
         TextInputLayout day8 = (TextInputLayout) findViewById(R.id.day8);
-        day8.setHint("8天前");
+        day8.setHint("留存8");
         mDay8 = day8.getEditText();
         TextInputLayout day9 = (TextInputLayout) findViewById(R.id.day9);
-        day9.setHint("9天前");
+        day9.setHint("留存9");
         mDay9 = day9.getEditText();
         TextInputLayout day10 = (TextInputLayout) findViewById(R.id.day10);
-        day10.setHint("10天前");
+        day10.setHint("留存10");
         mDay10 = day10.getEditText();
-        mDay2.setText(SP.getString(this, SP.KEY_WEIGHT_DAY2));
-        L.log(SP.getString(this, SP.KEY_WEIGHT_DAY2));
-        mDay3.setText(SP.getString(this, SP.KEY_WEIGHT_DAY3));
-        L.log(SP.getString(this, SP.KEY_WEIGHT_DAY3));
-        mDay4.setText(SP.getString(this, SP.KEY_WEIGHT_DAY4));
-        mDay5.setText(SP.getString(this, SP.KEY_WEIGHT_DAY5));
-        mDay6.setText(SP.getString(this, SP.KEY_WEIGHT_DAY6));
-        mDay7.setText(SP.getString(this, SP.KEY_WEIGHT_DAY7));
-        mDay8.setText(SP.getString(this, SP.KEY_WEIGHT_DAY8));
-        mDay9.setText(SP.getString(this, SP.KEY_WEIGHT_DAY9));
-        mDay10.setText(SP.getString(this, SP.KEY_WEIGHT_DAY10));
+        mDay2.setText(mLoadSetDay.getDay2());
+        mDay3.setText(mLoadSetDay.getDay3());
+        mDay4.setText(mLoadSetDay.getDay4());
+        mDay5.setText(mLoadSetDay.getDay5());
+        mDay6.setText(mLoadSetDay.getDay6());
+        mDay7.setText(mLoadSetDay.getDay7());
+        mDay8.setText(mLoadSetDay.getDay8());
+        mDay9.setText(mLoadSetDay.getDay9());
+        mDay10.setText(mLoadSetDay.getDay10());
     }
 
-    Spinner spinnerDay;
+
     private void initSpinnerView() {
         spinnerDay = (Spinner) findViewById(R.id.spinner_days);
-        final DataSpinner1Adapter adapterDay = new DataSpinner1Adapter(this);
-        mPositionDay = SP.getInt(this, SP.KEY_DAY);
+        mPositionDay = mLoadSetDay.getDay();
+        DataSpinner1Adapter adapterDay = new DataSpinner1Adapter(this);
         adapterDay.setData(DAY);
-        spinnerDay.setAdapter(adapterDay);
         spinnerDay.setSelection(mPositionDay, true);
-        spinnerDay.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                L.debug("position"+position);
-                if(position != mPositionDay){
-                    mPositionDay = position;
+        spinnerDay.setAdapter(adapterDay);
+        spinnerDay.setOnItemSelectedListener(this);
 
-                }
-            }
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        });
         Spinner spinnerHour = (Spinner) findViewById(R.id.spinner_hours);
-        final DataSpinner1Adapter adapterHour = new DataSpinner1Adapter(this);
-        mPositionHour = SP.getInt(this,SP.KEY_HOUR);
+        DataSpinner1Adapter adapterHour = new DataSpinner1Adapter(this);
+        mPositionHour = mLoadSetDay.getHour();
         adapterHour.setData(HOURS);
         spinnerHour.setAdapter(adapterHour);
         spinnerHour.setSelection(mPositionHour, true);
-        spinnerHour.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if(position != mPositionHour){
-                    mPositionHour = position;
-                }
-            }
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        });
+        spinnerHour.setOnItemSelectedListener(this);
 
         Spinner spinnerMinute = (Spinner) findViewById(R.id.spinner_minutes);
-        final DataSpinner1Adapter adapterMinute = new DataSpinner1Adapter(this);
-        mPositionMinute = SP.getInt(this,SP.KEY_MINUTE);
+        DataSpinner1Adapter adapterMinute = new DataSpinner1Adapter(this);
+        mPositionMinute = mLoadSetDay.getMinute();
         adapterMinute.setData(MINUTE_AND_SECOND);
         spinnerMinute.setAdapter(adapterMinute);
         spinnerMinute.setSelection(mPositionMinute,true);
-        spinnerMinute.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (position != mPositionMinute) {
-                    mPositionMinute = position;
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        });
+        spinnerMinute.setOnItemSelectedListener(this);
 
         Spinner spinnerMinuteTo = (Spinner) findViewById(R.id.spinner_minutes_to);
-        final DataSpinner1Adapter adapterMinuteTo = new DataSpinner1Adapter(this);
-        mPositionMinuteTo = SP.getInt(this,SP.KEY_MINUTE_TO);
+        DataSpinner1Adapter adapterMinuteTo = new DataSpinner1Adapter(this);
+        mPositionMinuteTo = mLoadSetDay.getMinute();
         adapterMinuteTo.setData(MINUTE_AND_SECOND);
         spinnerMinuteTo.setAdapter(adapterMinuteTo);
         spinnerMinuteTo.setSelection(mPositionMinuteTo, true);
-        spinnerMinuteTo.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (position != mPositionMinuteTo) {
-                    mPositionMinuteTo = position;
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        });
+        spinnerMinuteTo.setOnItemSelectedListener(this);
 
         Spinner spinnerHourTo = (Spinner) findViewById(R.id.spinner_hours_to);
-        final DataSpinner1Adapter adapterHourTo = new DataSpinner1Adapter(this);
-        mPositionHourTo = SP.getInt(this,SP.KEY_HOUR_TO);
+        DataSpinner1Adapter adapterHourTo = new DataSpinner1Adapter(this);
+        mPositionHourTo = mLoadSetDay.getHourto();
         adapterHourTo.setData(HOURS);
         spinnerHourTo.setAdapter(adapterHour);
         spinnerHourTo.setSelection(mPositionHourTo, true);
-        spinnerHourTo.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (position != mPositionHourTo) {
-                    mPositionHourTo = position;
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        });
+        spinnerHourTo.setOnItemSelectedListener(this);
     }
 
-    private DataInfo dataInfo;
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -582,6 +523,8 @@ public class SetDataActivity extends TimePickActivity implements SwipeRefreshLay
         getMenuInflater().inflate(R.menu.setdata, menu);
         return true;
     }
+
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -600,82 +543,59 @@ public class SetDataActivity extends TimePickActivity implements SwipeRefreshLay
 
         }else if(id ==R.id.action_get){
             String channel = channelList.get(mPositionChannel).getName();
-            String day = DAY[mPositionDay];
-            String[] splitDay = day.split(":");
+            int effectiveSpinnerValue = getEffectiveSpinnerValue(DAY[mPositionDay]);
             if(mPositionDay == 0){
                 Toast.makeText(this,"当前条件下不能获取数据",Toast.LENGTH_SHORT).show();
             }
             else if(mPositionDay == 1){
-                if(splitDay.length == 2){
-                    dataService.getSetDateNew(channel);
-                }else{
-                    Toast.makeText(this,"参数失效",Toast.LENGTH_SHORT).show();
-                }
-                //超过指定时间后，如果还是网络获取当天数据，则自动跳到获取昨天,但是一天只能跳一次
-//                if(mEndTimeBox.isChecked() && !SP.getString(this,SP.KEY_AURO_DATE).equals(DateUtil.getCurDate())){
-//                    String[] split = mEndTimeText.getText().toString().split(":");
-//                    if(split.length == 2){
-//                        Calendar calendar = Calendar.getInstance();
-//                        if((calendar.get(Calendar.HOUR_OF_DAY) > Integer.parseInt(split[0])) ||
-//                                ((calendar.get(Calendar.HOUR_OF_DAY) == Integer.parseInt(split[0])) && (calendar.get(Calendar.MINUTE) >= Integer.parseInt(split[1])))){
-//                            mPositionDay = 2;
-//                            spinnerDay.setSelection(mPositionDay);
-//                            SP.set(SP.KEY_AURO_DATE,DateUtil.getCurDate());
-//                        }
-//                    }
-//                }
+                dataService.getSetDateNew(channel);
             }else{
-                if(splitDay.length == 2){
-                    dataService.getSetDataUsed(channel, Integer.parseInt(splitDay[1]) ,HOURS[mPositionHour],MINUTE_AND_SECOND[mPositionMinute],HOURS[mPositionHourTo],MINUTE_AND_SECOND[mPositionMinuteTo]);
-                }else{
-                    Toast.makeText(this,"参数失效",Toast.LENGTH_SHORT).show();
-                }
+                //昨天是２Integer.parseInt(splitDay[1]) 所以-1
+                dataService.getSetDataUsed(channel, effectiveSpinnerValue - 1 ,HOURS[mPositionHour],MINUTE_AND_SECOND[mPositionMinute],HOURS[mPositionHourTo],MINUTE_AND_SECOND[mPositionMinuteTo]);
             }
 
         }else if(id == R.id.action_get_local){
-            if(mPositionDay == 0){
-                Toast.makeText(this,"当前条件下不能获取数据",Toast.LENGTH_SHORT).show();
+            if(mPositionDay == 0 || mPositionDay == 1){
+                Toast.makeText(this,"当前条件下不能获取本地数据",Toast.LENGTH_SHORT).show();
 
             }else{
-                String day = DAY[mPositionDay];
-                String splitDay = day.split(":")[1];
+                String dayString = getDayString(mPositionDay);
+                int weight = 100;
+                if(!"".equals(dayString)){
+                    weight = Integer.parseInt(dayString);
+                    if(weight == 0){
+                        setPosionDayToNext();
+                        Toast.makeText(SetDataActivity.this,"超过指定百分比,跳转",Toast.LENGTH_SHORT).show();
+                        return super.onOptionsItemSelected(item);
+                    }
+                }
+                int effectiveSpinnerValue = getEffectiveSpinnerValue(DAY[mPositionDay]);
+                long dateTimeFrom = DateUtil.getDateTimeMills(effectiveSpinnerValue - 1, Integer.parseInt(HOURS[mPositionHour]), Integer.parseInt(MINUTE_AND_SECOND[mPositionMinute]), 0);
+                long dateTimeTo = DateUtil.getDateTimeMills(effectiveSpinnerValue - 1, Integer.parseInt(HOURS[mPositionHourTo]), Integer.parseInt(MINUTE_AND_SECOND[mPositionMinuteTo]), 0);
 
-                DataInfo localData = localDataDao.getLocalData(DateUtil.getCurDate(Integer.parseInt(splitDay)));
+                String thatDay = DateUtil.getCurDate(effectiveSpinnerValue - 1);
+                Log.d("unlock",thatDay+"-"+(new Date(dateTimeFrom).toLocaleString())+"-"+(new Date(dateTimeTo).toLocaleString()));
+                DataInfo localData = localDataDao.getLocalData(thatDay,dateTimeFrom,dateTimeTo);
                 //本地有数据
                 if(localData != null){
                     dataInfo = localData;
-                    setDataInfo(dataInfo);
+                    setDataInfo(localData);
                     Toast.makeText(SetDataActivity.this,"获取历史数据",Toast.LENGTH_SHORT).show();
                     //根据设定指定天数的权重来限制那一天的本地数据获取数量．
-                    String dayString = getDayString(mPositionDay);
-                    if(!TextUtils.isEmpty(dayString) && mPositionDay != 1){
+                    if(!TextUtils.isEmpty(dayString) ){
                         try {
-                            int weight = Integer.parseInt(dayString);
-                            if(weight == 0){
-                                return super.onOptionsItemSelected(item);
-                            }
-                            boolean dataWeight = localDataDao.getDataWeight(DateUtil.getCurDate(Integer.parseInt(splitDay)), weight);
+
+                            boolean dataWeight = localDataDao.getDataWeight(thatDay, weight);
                             if(dataWeight){
-                                if(mPositionDay > 0 && mPositionDay < DAY.length - 1){
-                                    mPositionDay ++;
-                                }
-//                                else if(mPositionDay == DAY.length - 1){
-//                                    mPositionDay = 0;
-//                                }
-                                spinnerDay.setSelection(mPositionDay);
+                                setPosionDayToNext();
+                                Toast.makeText(SetDataActivity.this,"超过指定百分比,跳转",Toast.LENGTH_SHORT).show();
                             }
                         }catch (Exception e){
                         }
                     }
                 }else {
                     Toast.makeText(SetDataActivity.this,"指定天数下没有数据",Toast.LENGTH_SHORT).show();
-                    if(mPositionDay > 0 && mPositionDay < DAY.length - 1){
-                        mPositionDay ++;
-                    }
-//                    else if(mPositionDay == DAY.length - 1){
-//                        mPositionDay = 0;
-//                    }
-                    spinnerDay.setSelection(mPositionDay);
+                    setPosionDayToNext();
                 }
             }
 
@@ -684,6 +604,13 @@ public class SetDataActivity extends TimePickActivity implements SwipeRefreshLay
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void setPosionDayToNext(){
+        if(mPositionDay > 0 && mPositionDay < DAY.length - 1){
+            mPositionDay ++;
+        }
+        spinnerDay.setSelection(mPositionDay);
     }
 
     /**
@@ -705,6 +632,7 @@ public class SetDataActivity extends TimePickActivity implements SwipeRefreshLay
      * 保存信息到hashmap
      */
     private void saveDataInfo() {
+        jsonPut(XposeUtil.m_ExtraInfo, mExtrainfo.getText().toString().trim());
         jsonPut(XposeUtil.m_deviceId, mDeviceId.getText().toString().trim());
         jsonPut(XposeUtil.m_androidId, mAndroidId.getText().toString().trim());
         jsonPut(XposeUtil.m_bluetoothaddress, mBluetoothAddress.getText().toString().trim());
@@ -735,6 +663,12 @@ public class SetDataActivity extends TimePickActivity implements SwipeRefreshLay
     }
 
     private void setDataInfo(DataInfo dataInfo) {
+        if(TextUtils.isEmpty(dataInfo.getExtraInfo())){
+
+            mExtrainfo.setText(RandomUtil.getWIFIName());
+        }else {
+            mExtrainfo.setText(dataInfo.getExtraInfo());
+        }
         mDeviceId.setText(dataInfo.getDeviceId());
         mAndroidId.setText(dataInfo.getAndroidId());
         mBluetoothAddress.setText(dataInfo.getBluetoothAddress());
@@ -769,6 +703,7 @@ public class SetDataActivity extends TimePickActivity implements SwipeRefreshLay
 
     private void updateDataInfo(){
 
+        dataInfo.setExtraInfo(getTextString(mExtrainfo));
         dataInfo.setDeviceId(getTextString(mDeviceId));
         dataInfo.setAndroidId(getTextString(mAndroidId));
         dataInfo.setBluetoothAddress(getTextString(mBluetoothAddress));
@@ -830,24 +765,23 @@ public class SetDataActivity extends TimePickActivity implements SwipeRefreshLay
     @Override
     public void back() {
 
-        SP.set(SP.KEY_CHANNEL,mPositionChannel);
-        SP.set(SP.KEY_DAY,mPositionDay);
-        SP.set(SP.KEY_HOUR,mPositionHour);
-        SP.set(SP.KEY_HOUR_TO,mPositionHourTo);
-        SP.set(SP.KEY_MINUTE,mPositionMinute);
-        SP.set(SP.KEY_MINUTE_TO, mPositionMinuteTo);
-//        SP.set(SP.KEY_END_AUTO_TODAY, mEndTimeText.getText().toString());
-//        SP.set(SP.KEY_SET_END_AUTO,mEndTimeBox.isChecked());
-
-        SP.set(SP.KEY_WEIGHT_DAY2,getDayString(2));
-        SP.set(SP.KEY_WEIGHT_DAY3,getDayString(3));
-        SP.set(SP.KEY_WEIGHT_DAY4,getDayString(4));
-        SP.set(SP.KEY_WEIGHT_DAY5,getDayString(5));
-        SP.set(SP.KEY_WEIGHT_DAY6,getDayString(6));
-        SP.set(SP.KEY_WEIGHT_DAY7,getDayString(7));
-        SP.set(SP.KEY_WEIGHT_DAY8,getDayString(8));
-        SP.set(SP.KEY_WEIGHT_DAY9,getDayString(9));
-        SP.set(SP.KEY_WEIGHT_DAY10,getDayString(10));
+//        SP.set(SP.KEY_CHANNEL,mPositionChannel);
+//        SP.set(SP.KEY_DAY,mPositionDay);
+//        SP.set(SP.KEY_HOUR,mPositionHour);
+//        SP.set(SP.KEY_HOUR_TO,mPositionHourTo);
+//        SP.set(SP.KEY_MINUTE,mPositionMinute);
+//        SP.set(SP.KEY_MINUTE_TO, mPositionMinuteTo);
+//
+//        SP.set(SP.KEY_WEIGHT_DAY2,getDayString(2));
+//        SP.set(SP.KEY_WEIGHT_DAY3,getDayString(3));
+//        SP.set(SP.KEY_WEIGHT_DAY4,getDayString(4));
+//        SP.set(SP.KEY_WEIGHT_DAY5,getDayString(5));
+//        SP.set(SP.KEY_WEIGHT_DAY6,getDayString(6));
+//        SP.set(SP.KEY_WEIGHT_DAY7,getDayString(7));
+//        SP.set(SP.KEY_WEIGHT_DAY8,getDayString(8));
+//        SP.set(SP.KEY_WEIGHT_DAY9,getDayString(9));
+//        SP.set(SP.KEY_WEIGHT_DAY10,getDayString(10));
+        saveSetDay();
 
         updateDataInfo();
         setDataToLocal();
@@ -857,9 +791,15 @@ public class SetDataActivity extends TimePickActivity implements SwipeRefreshLay
         Toast.makeText(this,"保存成功",Toast.LENGTH_SHORT).show();
     }
 
+    private void saveSetDay() {
+        SetDay setDay = new SetDay(getDayString(2),getDayString(3),getDayString(4),getDayString(5),getDayString(6),getDayString(7),getDayString(8),
+                getDayString(9),getDayString(10),mPositionChannel,mPositionDay,mPositionHour,mPositionHourTo,mPositionMinute,mPositionMinuteTo);
+        SetDay.saveSetDay(this,setDay);
+
+    }
+
     @Override
     public void onRefresh() {
-        Log.d("unlock","刷新数据");
         channelService.getChannelName();
     }
 
@@ -867,7 +807,6 @@ public class SetDataActivity extends TimePickActivity implements SwipeRefreshLay
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        L.log("onActivityResult"+requestCode);
         if(requestCode == LOCAL_DATA && resultCode == RESULT_OK){
             DataInfo dataInfo = (DataInfo) data.getSerializableExtra(LocalDataDetailActivity.DATA);
             setDataInfo(dataInfo);
@@ -892,8 +831,34 @@ public class SetDataActivity extends TimePickActivity implements SwipeRefreshLay
     }
 
 
-    static Calendar mCalendar = Calendar.getInstance();
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        int viewId = parent.getId();
+        switch (viewId){
+            case R.id.spinner_days:
+                mPositionDay = position;
+                break;
+            case R.id.spinner_hours:
+                mPositionHour = position;
+                break;
+            case R.id.spinner_minutes:
+                mPositionMinute = position;
+                break;
+            case R.id.spinner_minutes_to:
+                mPositionMinuteTo = position;
+                break;
+            case R.id.spinner_hours_to:
+                mPositionHourTo = position;
+                break;
+            case R.id.spinner:
+                mPositionChannel = position;
+                break;
+        }
+    }
 
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+    }
 
 
     /**
@@ -906,9 +871,6 @@ public class SetDataActivity extends TimePickActivity implements SwipeRefreshLay
         String result = "";
         switch (position){
 
-            case 1:
-                result = mDay1.getText().toString().trim();
-                break;
             case 2:
                 result = mDay2.getText().toString().trim();
                 break;

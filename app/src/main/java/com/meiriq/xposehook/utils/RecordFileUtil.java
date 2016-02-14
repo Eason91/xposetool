@@ -167,11 +167,15 @@ public class RecordFileUtil {
     }
 
 
-
+    /**
+     * 删除制定的监听记录文件
+     * @param packageName
+     * @return
+     */
     public static boolean clearFileRecord(String packageName){
         clearFileMap();
         File file = new File(Environment.getExternalStorageDirectory()+ FILE_PATH_RECORD + File.separator + packageName);
-        L.debug(file.exists()+file.getAbsolutePath());
+        L.log(file.exists() + file.getAbsolutePath());
         if(file.exists()){
             return file.delete();
         }
@@ -207,22 +211,35 @@ public class RecordFileUtil {
         Iterator<Map.Entry<String, String>> iterator = fileMap.entrySet().iterator();
         ArrayList whiteFileRecord = getWhiteFileRecord();
         ArrayList<String> whiteFolderFileRecord = getWhiteFolderFileRecord();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()){//遍历所以监听到文件
             Map.Entry<String, String> entry = iterator.next();
             File file = new File(entry.getKey());
 
             if(file.exists() && file.isFile()){
-                String absolutePath = file.getAbsolutePath();
-                for (int i = 0; i < whiteFolderFileRecord.size(); i++) {
-                    //白名单文件夹和白名单文件
-                    if(absolutePath.contains(whiteFolderFileRecord.get(i)) || whiteFileRecord.contains(absolutePath)){
+                //如果文件属于白名单就不删除
+                boolean delete = true;
+                String targetFile = file.getAbsolutePath();
+                //判断是否在白名单文件中
+                for (int i = 0; i < whiteFileRecord.size(); i++) {
+                    if(whiteFileRecord.get(i).equals(targetFile)){
+                        delete = false;
                         break;
                     }
-                    //循环到最后一个白名单文件列表项，说明数据可以删除
-                    if(i == whiteFolderFileRecord.size() - 1){
-                        boolean delete = file.delete();
-                        L.debug("文件删除"+delete+absolutePath+"==="+whiteFolderFileRecord.get(i));
+                }
+                //判断是否在白名单文件夹中
+                if(delete){
+                    for (int i = 0; i < whiteFolderFileRecord.size(); i++) {
+                        //文件的名字包含有白名单文件夹
+                        if(targetFile.contains(whiteFolderFileRecord.get(i))){
+                            delete = false;
+                            break;
+                        }
                     }
+                }
+
+                if(delete){
+                    boolean result = file.delete();
+//                    L.log("文件删除" + result + targetFile);
                 }
             }
         }

@@ -40,25 +40,25 @@ public class DbHelper extends SQLiteOpenHelper{
             + "phoneModelNumber VARCHAR(32),productName VARCHAR(32),productor VARCHAR(32),equipmentName VARCHAR(32),cpu VARCHAR(32),"
             + "hardware VARCHAR(32),fingerPrint VARCHAR(64),portNumber VARCHAR(32),bluetoothAddress VARCHAR(64),internalIp VARCHAR(32)"
             + ")";
+    public static final String CREATE_WHITE_UNINSTALL_TABLE = "CREATE TABLE "
+            + TABLE_WHITE_UNINSTALL
+            + "(_id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,pkgname VARCHAR(100) NOT NULL UNIQUE,appname VARCHAR(32))";
+    public static final String CREATE_TCLEAR_DATA_TABLE = "CREATE TABLE "
+                + TABLE_CLEAR_DATA
+                + "(_id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,pkgname VARCHAR(100) NOT NULL UNIQUE,appname VARCHAR(32))";
+    public static final String CREATE_WHITE_APK_TABLE = "CREATE TABLE "
+            + TABLE_WHITE_APK
+            + "(_id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,name VARCHAR(100) NOT NULL UNIQUE,directory VARCHAR(100))";
     @Override
     public void onCreate(SQLiteDatabase db) {
 
 
         db.execSQL(CREATE_LOCAL_DATA_TABLE);
 
-        String CREATE_WHITE_UNINSTALL_TABLE = "CREATE TABLE "
-                + TABLE_WHITE_UNINSTALL
-                + "(_id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,pkgname VARCHAR(100) NOT NULL UNIQUE,appname VARCHAR(32))";
         db.execSQL(CREATE_WHITE_UNINSTALL_TABLE);
 
-        String CREATE_TCLEAR_DATA_TABLE = "CREATE TABLE "
-                + TABLE_CLEAR_DATA
-                + "(_id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,pkgname VARCHAR(100) NOT NULL UNIQUE,appname VARCHAR(32))";
         db.execSQL(CREATE_TCLEAR_DATA_TABLE);
 
-        String CREATE_WHITE_APK_TABLE = "CREATE TABLE "
-                + TABLE_WHITE_APK
-                + "(_id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,name VARCHAR(100) NOT NULL UNIQUE,directory VARCHAR(100))";
         db.execSQL(CREATE_WHITE_APK_TABLE);
 
     }
