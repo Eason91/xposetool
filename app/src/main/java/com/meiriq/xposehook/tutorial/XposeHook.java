@@ -350,7 +350,6 @@ public class XposeHook implements IXposedHookLoadPackage{
                             param.setResult(displayMetrics);
                         }
                     }
-
                 }else
                 //屏幕大小
                 if("getMetrics".equals(methodName)&& !packageName.contains("miui") && !packageName.contains("android")){

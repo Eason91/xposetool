@@ -76,4 +76,9 @@
     <string name="title_activity_local_data">LocalDataActivity</string>
     <string name="title_activity_local_data_detail">LocalDataDetailActivity</string>
     <string name="title_activity_datakeepstatus">留存设置</string>
+    <string name="title_activity_clear_dbtime">ClearDBTimeActivity</string>
+    <string name="hello_world">Hello world!</string>
+
+<!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

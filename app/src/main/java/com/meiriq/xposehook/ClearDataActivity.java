@@ -1,8 +1,6 @@
 package com.meiriq.xposehook;
 
-import android.content.Intent;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.LinearLayoutManager;
@@ -17,7 +15,6 @@ import com.meiriq.xposehook.bean.AppInfo;
 import com.meiriq.xposehook.dao.ClearDataDao;
 import com.meiriq.xposehook.tutorial.AppUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class ClearDataActivity extends BaseActivity {

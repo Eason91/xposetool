@@ -272,6 +272,7 @@ public class SetDataActivity extends TimePickActivity implements SwipeRefreshLay
         mLocalRandom.setOnClickListener(this);
 
         localDataDao = new LocalDataDao(this);
+
         dataService = new DataService(this);
 
         initSpinnerView();

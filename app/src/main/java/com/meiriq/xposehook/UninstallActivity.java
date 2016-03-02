@@ -58,8 +58,8 @@ public class UninstallActivity extends BaseActivity {
                 } else {
 //                    Snackbar.make(view, "没有选择程序!!!", Snackbar.LENGTH_SHORT).show();
 //                    dataService.sendDataDeprecated(UninstallActivity.this, ConfigHelper.loadDataInfo(UninstallActivity.this).getId());
-//                    LocalDataDao localDataDao = new LocalDataDao(UninstallActivity.this);
-//                    int delete = localDataDao.delete("id = ?", new String[]{ConfigHelper.loadDataInfo(UninstallActivity.this).getId()});
+//                    LocalDataDao mLocalDataDao = new LocalDataDao(UninstallActivity.this);
+//                    int delete = mLocalDataDao.delete("id = ?", new String[]{ConfigHelper.loadDataInfo(UninstallActivity.this).getId()});
                 }
             }
         });

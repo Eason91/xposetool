@@ -15,6 +15,8 @@ import com.meiriq.xposehook.utils.DateUtil;
 import com.meiriq.xposehook.utils.L;
 
 import java.io.File;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -71,6 +73,20 @@ public class LocalDataDao extends BaseDao<DataInfo>{
     @Override
     public int update(DataInfo item, String whereClause, String[] whereArgs) {
         return update(TABLE_LOCAL_DATA, SetDataUtil.wrapLocalData2Values(item), whereClause, whereArgs);
+    }
+
+    /**
+     * 清除指定天数下的数据使用请情况，全部改为未使用
+     * @param savetime
+     * @return
+     */
+    public int clearWhichDay(String savetime){
+        ContentValues contentValues = new ContentValues();
+//        contentValues.put("savetime",savetime);
+        contentValues.put("usetime", "");
+
+
+        return update(TABLE_LOCAL_DATA, contentValues, "savetime = ?", new String[]{savetime});
     }
 
     @Override
