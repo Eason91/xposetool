@@ -1,5 +1,6 @@
 package com.meiriq.xposehook;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -9,6 +10,8 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -17,8 +20,11 @@ import com.meiriq.xposehook.bean.AppInfo;
 import com.meiriq.xposehook.utils.L;
 import com.meiriq.xposehook.utils.RecordFileUtil;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
+import ru.bartwell.exfilepicker.ExFilePickerParcelObject;
 
 public class RecordFileWhiteActivity extends BaseActivity {
 
@@ -67,6 +73,54 @@ public class RecordFileWhiteActivity extends BaseActivity {
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.record_white_folder, menu);
+        return true;
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+//            startActivity(new Intent(this,WhiteListActivity.class));
+            Intent intent = new Intent(getApplicationContext(), ru.bartwell.exfilepicker.ExFilePickerActivity.class);
+            startActivityForResult(intent, EX_FILE_PICKER_RESULT);
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+    private static final int EX_FILE_PICKER_RESULT = 0;
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == EX_FILE_PICKER_RESULT) {
+            if (data != null) {
+                ExFilePickerParcelObject object = (ExFilePickerParcelObject) data.getParcelableExtra(ExFilePickerParcelObject.class.getCanonicalName());
+                if (object.count > 0) {
+                    // Here is object contains selected files names and path
+                    for (int i = 0; i < object.count; i++) {
+                        File file = new File(object.path,object.names.get(i));
+                        String absolutePath = file.getAbsolutePath();
+                        if(!absolutePath.endsWith("/")){
+                            absolutePath = absolutePath + "/";
+                        }
+                        AppInfo appInfo = new AppInfo();
+                        appInfo.setIsSelect(true);
+                        appInfo.setAppname(absolutePath);
+                        mShowWhiteLists.add(appInfo);
+                        adapter.setData(mShowWhiteLists);
+                        adapter.notifyDataSetChanged();
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
     public boolean onTouchEvent(MotionEvent event) {
         return super.onTouchEvent(event);
     }
@@ -90,6 +144,10 @@ public class RecordFileWhiteActivity extends BaseActivity {
         for (int i = 0; i < mShowWhiteLists.size(); i++) {
             if(mShowWhiteLists.get(i).isSelect()){
                 RecordFileUtil.addWhiteFileRecord(mShowWhiteLists.get(i).getAppname());
+            }
+            if(new File(mShowWhiteLists.get(i).getAppname()).isDirectory() && mShowWhiteLists.get(i).isSelect()){
+                Log.d("unlock","白名单文件夹"+mShowWhiteLists.get(i).getAppname());
+                RecordFileUtil.addWhiteFolderRecord(mShowWhiteLists.get(i).getAppname());
             }
         }
     }

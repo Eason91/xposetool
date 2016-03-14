@@ -30,9 +30,7 @@
             android:name=".UninstallActivity"
             android:label="@string/title_activity_uninstall"
             android:theme="@style/AppTheme.NoActionBar" />
-        <activity
-            android:name=".SettingsActivity"
-            android:label="@string/title_activity_settings" />
+
         <activity
             android:name=".UninstallWhiteActivity"
             android:label="@string/title_activity_uninstall_white"
@@ -76,6 +74,11 @@
             android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="adjustPan" />
 
+        <activity
+            android:name="ru.bartwell.exfilepicker.ExFilePickerActivity"
+            android:configChanges="orientation|screenSize"
+            android:theme="@style/ExFilePickerThemeDark" />
+
         <service
             android:name="com.umeng.update.net.DownloadingService"
             android:process=":DownloadingService" />
@@ -106,6 +109,10 @@
         <activity
             android:name=".DataKeepStatusActivity"
             android:label="@string/title_activity_datakeepstatus"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".WhiteListActivity"
+            android:label="白名单文件夹"
             android:theme="@style/AppTheme.NoActionBar" />
 
         <service

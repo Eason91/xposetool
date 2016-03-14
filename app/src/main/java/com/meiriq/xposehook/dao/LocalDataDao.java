@@ -147,6 +147,13 @@ public class LocalDataDao extends BaseDao<DataInfo>{
         return null;
     }
 
+    /**
+     * 获取指定日期指定时间范围内的，当天未使用过的数据
+     * @param saveTime 指定日期
+     * @param dateTimeFrom 开始时间 小时，分钟
+     * @param dateTimeTo 结束时间 小时，分钟
+     * @return
+     */
     public DataInfo getLocalData(String saveTime, long dateTimeFrom, long dateTimeTo) {
         Cursor cursor = queryDateTime(new String[]{saveTime, DateUtil.getCurDate(), String.valueOf(dateTimeFrom), String.valueOf(dateTimeTo)});
         ArrayList<DataInfo> dataInfos = SetDataUtil.parseCursor2List(cursor);

@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/XposeHook.iml" filepath="$PROJECT_DIR$/XposeHook.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/library/library.iml" filepath="$PROJECT_DIR$/library/library.iml" />
       <module fileurl="file://$PROJECT_DIR$/xposetool.iml" filepath="$PROJECT_DIR$/xposetool.iml" />
     </modules>
   </component>

@@ -52,8 +52,9 @@ public class LocalDataActivity extends BaseActivity {
         mRecyclerView.setAdapter(adapter);
     }
 
+    //删除30天前的数据
     private void deleteLocalData(){
-        long timeMillis = DateUtil.getTimeMillis(9);
+        long timeMillis = DateUtil.getTimeMillis(30);
         mLocalDataDao.delete("detailtime < ?",new String[]{String.valueOf(timeMillis)});
     }
 

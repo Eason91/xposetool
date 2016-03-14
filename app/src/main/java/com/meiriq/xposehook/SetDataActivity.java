@@ -2,12 +2,12 @@ package com.meiriq.xposehook;
 
 import android.content.Intent;
 import android.database.Cursor;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.AppCompatButton;
+import android.support.v7.widget.AppCompatCheckBox;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -27,6 +27,7 @@ import com.meiriq.xposehook.bean.DataInfo;
 import com.meiriq.xposehook.bean.DataKeepStatus;
 import com.meiriq.xposehook.bean.SetDay;
 import com.meiriq.xposehook.dao.LocalDataDao;
+import com.meiriq.xposehook.fragment.KeepDataSettingFragment;
 import com.meiriq.xposehook.net.Callback;
 import com.meiriq.xposehook.net.ErrorObject;
 import com.meiriq.xposehook.net.control.ChannelService;
@@ -38,12 +39,12 @@ import com.meiriq.xposehook.utils.XposeUtil;
 
 import org.json.JSONException;
 
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
-public class SetDataActivity extends TimePickActivity implements SwipeRefreshLayout.OnRefreshListener, View.OnClickListener, AdapterView.OnItemSelectedListener {
-    public static final String[] DAY = {"0:0","留存(今天):1","留存(昨天):2","留存:3","留存:4","留存:5","留存:6","留存:7","留存:8","留存:9","留存:10"};
+public class SetDataActivity extends TimePickActivity implements SwipeRefreshLayout.OnRefreshListener, View.OnClickListener, AdapterView.OnItemSelectedListener,KeepDataSettingFragment.OnDataCallBack {
+    public static final String[] DAY = {"0:0","留存(今天):1","留存(昨天):2","留存:3","留存:4","留存:5","留存:6","留存:7","留存:8","留存:9","留存:10"
+            ,"留存:11","留存:12","留存:13","留存:14","留存:15","留存:16","留存:17","留存:18","留存:19","留存:20"
+            ,"留存:21","留存:22","留存:23","留存:24","留存:25","留存:26","留存:27","留存:28","留存:29","留存:30","留存:31"};
     private static final String[] HOURS = {"00","01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23"};
     private static final String[] MINUTE_AND_SECOND = {"00","10","20","30","40","50"};
 
@@ -51,15 +52,6 @@ public class SetDataActivity extends TimePickActivity implements SwipeRefreshLay
 
     private static List<DataKeepStatus> mDataKeepStatuses;//留存时间管理数据
 
-    EditText mDay2;
-    EditText mDay3;
-    EditText mDay4;
-    EditText mDay5;
-    EditText mDay6;
-    EditText mDay7;
-    EditText mDay8;
-    EditText mDay9;
-    EditText mDay10;
     Spinner spinnerDay;
 
     List<Channel> channelList;
@@ -135,65 +127,7 @@ public class SetDataActivity extends TimePickActivity implements SwipeRefreshLay
         super.onResume();
         mPositionDay = mLoadSetDay.getDay();
         spinnerDay.setSelection(mPositionDay, true);
-//        if(mDataKeepStatuses == null ){
-//            return;
-//        }
-//        DataKeepAsync keepAsync = new DataKeepAsync();
-//        keepAsync.execute(0);
-    }
 
-
-
-    /**
-     * 每次resume都验证一下当前留存时间是否需要改变
-     */
-    class DataKeepAsync extends AsyncTask<Integer,Integer,Integer>{
-
-        @Override
-        protected Integer doInBackground(Integer... params) {
-            long timeInMillis = Calendar.getInstance().getTimeInMillis();
-            String curDate = DateUtil.getCurDate();
-            if(mPositionDay != 0){
-                int keepDay = getEffectiveSpinnerValue(DAY[mPositionDay]);
-
-                int queryInWhichDayCount = localDataDao.queryInWhichDayCount(new String[]{DateUtil.getCurDate(keepDay - 1), curDate});
-                for (int i = 0; i < mDataKeepStatuses.size(); i++) {
-                    DataKeepStatus dataKeepStatus = mDataKeepStatuses.get(i);
-                    if(dataKeepStatus.getKeepCount() > 0){
-                        if( queryInWhichDayCount == dataKeepStatus.getKeepCount() && !curDate.equals(dataKeepStatus.getUseDay())){
-                            mPositionDay = dataKeepStatus.getKeepDayStatus();
-                            dataKeepStatus.setUseDay(curDate);
-                            DataKeepStatus.saveDataKeepStatus(SetDataActivity.this, mDataKeepStatuses);
-                            return mPositionDay;
-                        }
-                    }
-                }
-            }
-
-            for (int j = 0; j < mDataKeepStatuses.size(); j++) {
-                DataKeepStatus dataKeepStatus = mDataKeepStatuses.get(j);
-                String[] split = dataKeepStatus.getKeepTime().split(":");
-                Calendar instance = Calendar.getInstance();
-                instance.set(Calendar.HOUR_OF_DAY,Integer.parseInt(split[0]));
-                instance.set(Calendar.MINUTE, Integer.parseInt(split[1]));
-                if(Math.abs(instance.getTimeInMillis() - timeInMillis) < 1000 * 60 * 8 && !curDate.equals(dataKeepStatus.getUseDay())){
-                    mPositionDay = dataKeepStatus.getKeepDayStatus();
-                    Log.d("unlock","时间符合"+mPositionDay);
-                    dataKeepStatus.setUseDay(curDate);
-                    DataKeepStatus.saveDataKeepStatus(SetDataActivity.this, mDataKeepStatuses);
-                    return mPositionDay;
-                }
-            }
-            return -1;
-        }
-
-        @Override
-        protected void onPostExecute(Integer result) {
-            super.onPostExecute(result);
-            if(result != -1){
-                spinnerDay.setSelection(result);
-            }
-        }
     }
 
 
@@ -259,9 +193,18 @@ public class SetDataActivity extends TimePickActivity implements SwipeRefreshLay
 
 
     private SetDay mLoadSetDay;
+    private AppCompatCheckBox mModifyResolution;
+    private AppCompatButton mKeepSetting;
     private void initView() {
 
+
+
+        mModifyResolution = (AppCompatCheckBox) findViewById(R.id.modify_resolution);
+        mKeepSetting = (AppCompatButton) findViewById(R.id.accb_keep_setting);
+        mKeepSetting.setOnClickListener(this);
+
         mLoadSetDay = SetDay.loadSetDay(this);
+        mModifyResolution.setChecked(mLoadSetDay.isResolution());
 
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipeRefreshLayout);
         mSwipeRefreshLayout.setOnRefreshListener(this);
@@ -277,7 +220,6 @@ public class SetDataActivity extends TimePickActivity implements SwipeRefreshLay
 
         initSpinnerView();
 
-        initDayView();
 
         TextInputLayout tilExtrainfo = (TextInputLayout) findViewById(R.id.til_extrainfo);
         tilExtrainfo.setHint("接入点名称");
@@ -434,44 +376,7 @@ public class SetDataActivity extends TimePickActivity implements SwipeRefreshLay
     }
 
 
-    private void initDayView() {
-        TextInputLayout day2 = (TextInputLayout) findViewById(R.id.day2);
-        day2.setHint("昨天2");
-        mDay2 = day2.getEditText();
-        TextInputLayout day3 = (TextInputLayout) findViewById(R.id.day3);
-        day3.setHint("留存3");
-        mDay3 = day3.getEditText();
-        TextInputLayout day4 = (TextInputLayout) findViewById(R.id.day4);
-        day4.setHint("留存4");
-        mDay4 = day4.getEditText();
-        TextInputLayout day5 = (TextInputLayout) findViewById(R.id.day5);
-        day5.setHint("留存5");
-        mDay5 = day5.getEditText();
-        TextInputLayout day6 = (TextInputLayout) findViewById(R.id.day6);
-        day6.setHint("留存6");
-        mDay6 = day6.getEditText();
-        TextInputLayout day7 = (TextInputLayout) findViewById(R.id.day7);
-        day7.setHint("留存7");
-        mDay7 = day7.getEditText();
-        TextInputLayout day8 = (TextInputLayout) findViewById(R.id.day8);
-        day8.setHint("留存8");
-        mDay8 = day8.getEditText();
-        TextInputLayout day9 = (TextInputLayout) findViewById(R.id.day9);
-        day9.setHint("留存9");
-        mDay9 = day9.getEditText();
-        TextInputLayout day10 = (TextInputLayout) findViewById(R.id.day10);
-        day10.setHint("留存10");
-        mDay10 = day10.getEditText();
-        mDay2.setText(mLoadSetDay.getDay2());
-        mDay3.setText(mLoadSetDay.getDay3());
-        mDay4.setText(mLoadSetDay.getDay4());
-        mDay5.setText(mLoadSetDay.getDay5());
-        mDay6.setText(mLoadSetDay.getDay6());
-        mDay7.setText(mLoadSetDay.getDay7());
-        mDay8.setText(mLoadSetDay.getDay8());
-        mDay9.setText(mLoadSetDay.getDay9());
-        mDay10.setText(mLoadSetDay.getDay10());
-    }
+
 
 
     private void initSpinnerView() {
@@ -560,22 +465,18 @@ public class SetDataActivity extends TimePickActivity implements SwipeRefreshLay
                 Toast.makeText(this,"当前条件下不能获取本地数据",Toast.LENGTH_SHORT).show();
 
             }else{
-                String dayString = getDayString(mPositionDay);
-                int weight = 100;
-                if(!"".equals(dayString)){
-                    weight = Integer.parseInt(dayString);
-                    if(weight == 0){
-                        setPosionDayToNext();
-                        Toast.makeText(SetDataActivity.this,"超过指定百分比,跳转",Toast.LENGTH_SHORT).show();
-                        return super.onOptionsItemSelected(item);
-                    }
+                int weight = mLoadSetDay.getDayByPosition(mPositionDay);
+                if(weight == 0){
+                    setPosionDayToNext();
+                    Toast.makeText(SetDataActivity.this,"超过指定百分比,跳转",Toast.LENGTH_SHORT).show();
+                    return super.onOptionsItemSelected(item);
                 }
+
                 int effectiveSpinnerValue = getEffectiveSpinnerValue(DAY[mPositionDay]);
                 long dateTimeFrom = DateUtil.getDateTimeMills(effectiveSpinnerValue - 1, Integer.parseInt(HOURS[mPositionHour]), Integer.parseInt(MINUTE_AND_SECOND[mPositionMinute]), 0);
                 long dateTimeTo = DateUtil.getDateTimeMills(effectiveSpinnerValue - 1, Integer.parseInt(HOURS[mPositionHourTo]), Integer.parseInt(MINUTE_AND_SECOND[mPositionMinuteTo]), 0);
 
                 String thatDay = DateUtil.getCurDate(effectiveSpinnerValue - 1);
-                Log.d("unlock",thatDay+"-"+(new Date(dateTimeFrom).toLocaleString())+"-"+(new Date(dateTimeTo).toLocaleString()));
                 DataInfo localData = localDataDao.getLocalData(thatDay,dateTimeFrom,dateTimeTo);
                 //本地有数据
                 if(localData != null){
@@ -583,17 +484,16 @@ public class SetDataActivity extends TimePickActivity implements SwipeRefreshLay
                     setDataInfo(localData);
                     Toast.makeText(SetDataActivity.this,"获取历史数据",Toast.LENGTH_SHORT).show();
                     //根据设定指定天数的权重来限制那一天的本地数据获取数量．
-                    if(!TextUtils.isEmpty(dayString) ){
-                        try {
+                    try {
 
-                            boolean dataWeight = localDataDao.getDataWeight(thatDay, weight);
-                            if(dataWeight){
-                                setPosionDayToNext();
-                                Toast.makeText(SetDataActivity.this,"超过指定百分比,跳转",Toast.LENGTH_SHORT).show();
-                            }
-                        }catch (Exception e){
+                        boolean dataWeight = localDataDao.getDataWeight(thatDay, weight);
+                        if(dataWeight){
+                            setPosionDayToNext();
+                            Toast.makeText(SetDataActivity.this,"超过指定百分比,跳转",Toast.LENGTH_SHORT).show();
                         }
+                    }catch (Exception e){
                     }
+
                 }else {
                     Toast.makeText(SetDataActivity.this,"指定天数下没有数据",Toast.LENGTH_SHORT).show();
                     setPosionDayToNext();
@@ -655,7 +555,11 @@ public class SetDataActivity extends TimePickActivity implements SwipeRefreshLay
         jsonPut(XposeUtil.m_simSerialNumber, mSimId.getText().toString().trim());
         jsonPut(XposeUtil.m_SSID, mRouteName.getText().toString().trim());
         jsonPut(XposeUtil.m_BSSID, mRouteAddress.getText().toString().trim());
-        jsonPut(XposeUtil.m_screenSize, mScreenSize.getText().toString().trim());
+        if(mModifyResolution.isChecked()){
+            jsonPut(XposeUtil.m_screenSize, mScreenSize.getText().toString().trim());
+        }else {
+            jsonPut(XposeUtil.m_screenSize, "");
+        }
         jsonPut(XposeUtil.m_simState, mSimStatus.getText().toString().trim());
         jsonPut(XposeUtil.m_framework, mSystemFramework.getText().toString().trim());
         jsonPut(XposeUtil.m_RELEASE, mSystemVersion.getText().toString().trim());
@@ -766,22 +670,7 @@ public class SetDataActivity extends TimePickActivity implements SwipeRefreshLay
     @Override
     public void back() {
 
-//        SP.set(SP.KEY_CHANNEL,mPositionChannel);
-//        SP.set(SP.KEY_DAY,mPositionDay);
-//        SP.set(SP.KEY_HOUR,mPositionHour);
-//        SP.set(SP.KEY_HOUR_TO,mPositionHourTo);
-//        SP.set(SP.KEY_MINUTE,mPositionMinute);
-//        SP.set(SP.KEY_MINUTE_TO, mPositionMinuteTo);
-//
-//        SP.set(SP.KEY_WEIGHT_DAY2,getDayString(2));
-//        SP.set(SP.KEY_WEIGHT_DAY3,getDayString(3));
-//        SP.set(SP.KEY_WEIGHT_DAY4,getDayString(4));
-//        SP.set(SP.KEY_WEIGHT_DAY5,getDayString(5));
-//        SP.set(SP.KEY_WEIGHT_DAY6,getDayString(6));
-//        SP.set(SP.KEY_WEIGHT_DAY7,getDayString(7));
-//        SP.set(SP.KEY_WEIGHT_DAY8,getDayString(8));
-//        SP.set(SP.KEY_WEIGHT_DAY9,getDayString(9));
-//        SP.set(SP.KEY_WEIGHT_DAY10,getDayString(10));
+
         saveSetDay();
 
         updateDataInfo();
@@ -793,9 +682,10 @@ public class SetDataActivity extends TimePickActivity implements SwipeRefreshLay
     }
 
     private void saveSetDay() {
-        SetDay setDay = new SetDay(getDayString(2),getDayString(3),getDayString(4),getDayString(5),getDayString(6),getDayString(7),getDayString(8),
-                getDayString(9),getDayString(10),mPositionChannel,mPositionDay,mPositionHour,mPositionHourTo,mPositionMinute,mPositionMinuteTo);
-        SetDay.saveSetDay(this,setDay);
+
+        mLoadSetDay.setOnlySpinner(mPositionChannel,mPositionDay,mPositionHour,mPositionHourTo,mPositionMinute,mPositionMinuteTo);
+        mLoadSetDay.setResolution(mModifyResolution.isChecked());
+        SetDay.saveSetDay(this,mLoadSetDay);
 
     }
 
@@ -828,6 +718,9 @@ public class SetDataActivity extends TimePickActivity implements SwipeRefreshLay
             setDataInfo(dataInfo);
         }else if(v.getId() == R.id.end_time_text){
             showCurTimePickerFragment();
+        }else if(v.getId() == R.id.accb_keep_setting){
+            KeepDataSettingFragment dataSettingFragment = KeepDataSettingFragment.newInstance(mLoadSetDay);
+            dataSettingFragment.show(getSupportFragmentManager(),"dialog");
         }
     }
 
@@ -861,46 +754,12 @@ public class SetDataActivity extends TimePickActivity implements SwipeRefreshLay
     public void onNothingSelected(AdapterView<?> parent) {
     }
 
-
-    /**
-     * 根据参数或者指定文本框的数据
-     * @param position
-     * @return
-     */
-    private String getDayString(int position){
-
-        String result = "";
-        switch (position){
-
-            case 2:
-                result = mDay2.getText().toString().trim();
-                break;
-            case 3:
-                result = mDay3.getText().toString().trim();
-                break;
-            case 4:
-                result = mDay4.getText().toString().trim();
-                break;
-            case 5:
-                result = mDay5.getText().toString().trim();
-                break;
-            case 6:
-                result = mDay6.getText().toString().trim();
-                break;
-            case 7:
-                result = mDay7.getText().toString().trim();
-                break;
-            case 8:
-                result = mDay8.getText().toString().trim();
-                break;
-            case 9:
-                result = mDay9.getText().toString().trim();
-                break;
-            case 10:
-                result = mDay10.getText().toString().trim();
-                break;
-        }
-
-        return result;
+    //回调。只修改留存天数的对应百分比(day2-day31)
+    @Override
+    public void onKeppData(SetDay setDay) {
+        Log.d("unlock","onKeppData"+setDay.toString());
+        mLoadSetDay.setOnlyDay(setDay);
     }
+
+
 }

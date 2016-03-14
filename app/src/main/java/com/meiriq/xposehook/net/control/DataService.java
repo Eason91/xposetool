@@ -31,7 +31,6 @@ public class DataService extends BaseService{
 
     public void getSetDateNew(String channel){
         mCallback.onStart();
-        L.debug("随机" + channel);
         try {
             channel = URLEncoder.encode(channel,"utf-8");
         } catch (UnsupportedEncodingException e) {
@@ -40,7 +39,6 @@ public class DataService extends BaseService{
 
         String param = "used=" + channel ;
         String url = Constant.url_getDataRandom + "?" + param;
-        L.debug("随机"+url);
         getStringRequest(url, null, new VolleyListener() {
             @Override
             public void onComplete(JSONObject jsonObject) {
@@ -81,7 +79,6 @@ public class DataService extends BaseService{
                 + "&endDate=" + dateTimeTo;
 
         String url = Constant.url_getDataUsed + "?" + param;
-        L.log("用过" + "---" + url);
         getStringRequest(url, null, new VolleyListener() {
             @Override
             public void onComplete(JSONObject jsonObject) {

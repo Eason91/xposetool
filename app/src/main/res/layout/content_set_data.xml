@@ -42,6 +42,8 @@
             android:text="随机数据"/>
 
 
+
+
     </LinearLayout>
 
     <LinearLayout
@@ -78,6 +80,8 @@
             android:background="@drawable/data_type_spinner"
             android:dropDownWidth="196dp" />
 
+
+
     </LinearLayout>
 
     <LinearLayout
@@ -113,6 +117,8 @@
             android:dropDownWidth="196dp" />
 
     </LinearLayout>
+
+
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -160,120 +166,30 @@
         android:orientation="horizontal"
         android:layout_height="wrap_content">
 
-
-        <android.support.design.widget.TextInputLayout
-            android:id="@+id/day2"
+        <android.support.v7.widget.AppCompatButton
             android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:id="@+id/accb_keep_setting"
             android:layout_weight="1"
-            android:layout_height="wrap_content">
-            <EditText
-                android:inputType="number"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-        </android.support.design.widget.TextInputLayout>
+            android:padding="5dp"
+            android:text="留存百分比设置"/>
 
-        <android.support.design.widget.TextInputLayout
-            android:id="@+id/day3"
+        <android.support.v7.widget.AppCompatCheckBox
+            android:id="@+id/modify_resolution"
             android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
             android:layout_weight="1"
-            android:layout_height="wrap_content">
-            <EditText
-                android:inputType="number"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-        </android.support.design.widget.TextInputLayout>
-
-        <android.support.design.widget.TextInputLayout
-            android:id="@+id/day4"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content">
-            <EditText
-                android:inputType="number"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-        </android.support.design.widget.TextInputLayout>
-
-        <android.support.design.widget.TextInputLayout
-            android:id="@+id/day5"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content">
-            <EditText
-                android:inputType="number"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-        </android.support.design.widget.TextInputLayout>
+            android:text="分辨率"/>
 
     </LinearLayout>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_below="@+id/ll_spinner4"
-        android:id="@+id/ll_spinner5"
-        android:orientation="horizontal"
-        android:layout_height="wrap_content">
 
-        <android.support.design.widget.TextInputLayout
-            android:id="@+id/day6"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content">
-            <EditText
-                android:inputType="number"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-        </android.support.design.widget.TextInputLayout>
-
-        <android.support.design.widget.TextInputLayout
-            android:id="@+id/day7"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content">
-            <EditText
-                android:inputType="number"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-        </android.support.design.widget.TextInputLayout>
-
-        <android.support.design.widget.TextInputLayout
-            android:id="@+id/day8"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content">
-            <EditText
-                android:inputType="number"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-        </android.support.design.widget.TextInputLayout>
-
-        <android.support.design.widget.TextInputLayout
-            android:id="@+id/day9"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content">
-            <EditText
-                android:inputType="number"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-        </android.support.design.widget.TextInputLayout>
-
-        <android.support.design.widget.TextInputLayout
-            android:id="@+id/day10"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content">
-            <EditText
-                android:inputType="number"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-        </android.support.design.widget.TextInputLayout>
-
-    </LinearLayout>
 
     <android.support.v4.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefreshLayout"
-        android:layout_below="@+id/ll_spinner5"
+        android:layout_below="@+id/ll_spinner4"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 

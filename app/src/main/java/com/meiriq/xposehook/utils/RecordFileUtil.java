@@ -211,7 +211,7 @@ public class RecordFileUtil {
         Iterator<Map.Entry<String, String>> iterator = fileMap.entrySet().iterator();
         ArrayList whiteFileRecord = getWhiteFileRecord();
         ArrayList<String> whiteFolderFileRecord = getWhiteFolderFileRecord();
-        while (iterator.hasNext()){//遍历所以监听到文件
+        while (iterator.hasNext()){//遍历所有监听到文件
             Map.Entry<String, String> entry = iterator.next();
             File file = new File(entry.getKey());
 
